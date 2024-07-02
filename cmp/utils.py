@@ -113,14 +113,20 @@ class Token:
         Token's lexeme.
     token_type : Enum
         Token's type.
+    row : int
+        Token's row.
+    col : int
+        Token's column.
     """
 
-    def __init__(self, lex, token_type):
+    def __init__(self, lex, token_type, row=0, col=0):
         self.lex = lex
         self.token_type = token_type
+        self.row = row
+        self.col = col
 
     def __str__(self):
-        return f'{self.token_type}: {self.lex}'
+        return f'{self.token_type}: {self.lex}, ({self.row}, {self.col})'
 
     def __repr__(self):
         return str(self)
