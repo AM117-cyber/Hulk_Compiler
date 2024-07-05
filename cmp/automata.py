@@ -30,7 +30,8 @@ class State:
         return self
 
     def has_transition(self, symbol):
-        return symbol in self.transitions
+        answer = symbol in self.transitions
+        return answer
 
     def add_transition(self, symbol, state):
         try:
@@ -96,7 +97,12 @@ class State:
 
     @staticmethod
     def move_by_state(symbol, *states):
-        return { s for state in states if state.has_transition(symbol) for s in state[symbol]}
+        # return { s for state in states if state.has_transition(symbol) for s in state[symbol]}
+        answer = { s for state in states if state.has_transition(symbol) for s in state[symbol]}
+        return answer
+
+    #This can be read as: “For each state in states, if state has a transition for symbol, 
+    # then for each s in the transitions of state for symbol, include s in the set.”
 
     @staticmethod
     def epsilon_closure_by_state(*states):
@@ -193,9 +199,13 @@ class State:
             return self.graph().create_svg().decode('utf8')
         except:
             pass
-
+        
     def write_to(self, fname):
-        return self.graph().write_svg(fname)
+        with open(fname, 'w', encoding='utf-8') as f:
+            f.write(self.graph().to_string())
+
+    # def write_to(self, fname):
+    #     return self.graph().write_svg(fname)
 
 def multiline_formatter(state):
     return '\n'.join(str(item) for item in state)
