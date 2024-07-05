@@ -1,5 +1,5 @@
 from cmp.pycompiler import Grammar
-from grammar.Nodes import *
+from grammar.ast_nodes import *
 G = Grammar()
 
 Program = G.NonTerminal('Program', True)
@@ -55,8 +55,8 @@ Type_function_list %= G.Epsilon, lambda h, s: []
 #------------------------------------------------Function_Declaration-------------------------------------------------------------------
 
 # Un parametro es una variable que recibe una funcion cuando es declarada
-Params %= id_ + comma + Params, lambda h, s: [(s[1],'None')]+s[3]
-Params %= id_, lambda h, s: [(s[1],'None')]
+Params %= id_ + comma + Params, lambda h, s: [(s[1],None)]+s[3]
+Params %= id_, lambda h, s: [(s[1],None)]
 Params %= id_ + colon + id_ + comma + Params, lambda h, s: [(s[1],s[3])]+s[5]
 Params %= id_ + colon + id_, lambda h, s: [(s[1],s[3])]
 
@@ -66,13 +66,13 @@ Method_signature %= id_ + o_par + c_par + colon + id_, lambda h, s: MethodSignat
 Method_signature %= id_ + o_par + c_par, lambda h, s: MethodSignatureNode(s[1],[])
 #El tercer parámetro por defecto es None
 
-Inline_form %= Method_signature + arrow + Expr + semicolon, lambda h, s: FunctionDeclarationNode(s[1],s[3])
+Inline_form %= Method_signature + arrow + Expr + semicolon, lambda h, s: MethodDeclarationNode(s[1],s[3])
 
-Full_form %= Method_signature + Expr_block + semicolon, lambda h, s: FunctionDeclarationNode(s[1],s[2])
-Full_form %= Method_signature + Expr_block, lambda h, s: FunctionDeclarationNode(s[1],s[2])
+Full_form %= Method_signature + Expr_block + semicolon, lambda h, s: MethodDeclarationNode(s[1],s[2])
+Full_form %= Method_signature + Expr_block, lambda h, s: MethodDeclarationNode(s[1],s[2])
 
-Func %= function_ + Inline_form, lambda h,s: s[2]
-Func %= function_ + Full_form, lambda h,s: s[2]
+Func %= function_ + Inline_form, lambda h,s: FunctionDeclarationNode(s[2])
+Func %= function_ + Full_form, lambda h,s: FunctionDeclarationNode(s[2])
 
 #------------------------------------------------Type_Declaration-------------------------------------------------------------------
 

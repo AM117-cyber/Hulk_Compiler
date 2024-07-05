@@ -1,5 +1,5 @@
 from cmp.visitor import on, when
-from grammar.Nodes import *
+from grammar.ast_nodes import *
 
 class FormatVisitor:
     @on('node')
@@ -15,14 +15,22 @@ class FormatVisitor:
 
     @when(MethodSignatureNode)
     def visit(self, node, tabs=0):
-        params = ', '.join(':'.join(param) for param in node.params)
+        # params = ', '.join(':'.join(param) for param in node.params)
+        params = ', '.join(':'.join((param[0], str(param[1]) if param[1] is None else param[1])) for param in node.params)
         ans = '\t' * tabs + f'\\__MethodSignatureNode: {node.name}({params}) : {node.returnType}'
         return ans
 
     @when(FunctionDeclarationNode)
     def visit(self, node, tabs=0):
-        params = ', '.join(':'.join(param) for param in node.params)
+        params = ', '.join(':'.join((param[0], str(param[1]) if param[1] is None else param[1])) for param in node.params)
         ans = '\t' * tabs + f'\\__FunctionDeclarationNode: {node.name}({params}): {node.returnType} -> <expr>'
+        body = self.visit(node.body, tabs + 1)
+        return f'{ans}\n{body}'
+    
+    @when(MethodDeclarationNode)
+    def visit(self, node, tabs=0):
+        params = ', '.join(':'.join((param[0], str(param[1]) if param[1] is None else param[1])) for param in node.params)
+        ans = '\t' * tabs + f'\\__MethodDeclarationNode: {node.name}({params}): {node.returnType} -> <expr>'
         body = self.visit(node.body, tabs + 1)
         return f'{ans}\n{body}'
 
@@ -41,16 +49,16 @@ class FormatVisitor:
     @when(TypeDeclarationNode)
     def visit(self, node, tabs=0):
         # params = ', '.join(node.params)
-        params = ', '.join(':'.join(param) for param in node.params)
-        ans = '\t' * tabs + f'\\__TypeDeclarationNode: {node.name}({params}) inherits {node.father} (<expr>,...,<expr>) -> <body>'
-        father_args = '\n'.join(self.visit(f_arg, tabs + 1) for f_arg in node.father_args)
+        params = ', '.join(':'.join((param[0], str(param[1]) if param[1] is None else param[1])) for param in node.params)
+        ans = '\t' * tabs + f'\\__TypeDeclarationNode: {node.name}({params}) inherits {node.parent} (<expr>,...,<expr>) -> <body>'
+        parent_args = '\n'.join(self.visit(f_arg, tabs + 1) for f_arg in node.parent_args)
         attributes = '\n'.join(self.visit(attr, tabs + 1) for attr in node.attributes)
         methods = '\n'.join(self.visit(method, tabs + 1) for method in node.methods)
-        return f'{ans}\n{father_args}\n{attributes}\n{methods}'
+        return f'{ans}\n{parent_args}\n{attributes}\n{methods}'
 
     @when(ProtocolDeclarationNode)
     def visit(self, node, tabs=0):
-        ans = '\t' * tabs + f'\\__ProtocolDeclarationNode: {node.name} extends {node.father} -> body'
+        ans = '\t' * tabs + f'\\__ProtocolDeclarationNode: {node.name} extends {node.parent} -> body'
         methods = '\n'.join(self.visit(method, tabs + 1) for method in node.methods)
         return f'{ans}\n{methods}'
 

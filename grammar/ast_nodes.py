@@ -27,12 +27,19 @@ class MethodSignatureNode(DeclarationNode):
         self.params = params
         self.returnType = returnType
 
-class FunctionDeclarationNode(DeclarationNode):
+class MethodDeclarationNode(DeclarationNode):
     def __init__(self, signature: MethodSignatureNode, body):
         self.name = signature.name
         self.params = signature.params
         self.returnType = signature.returnType
         self.body = body
+
+class FunctionDeclarationNode(DeclarationNode):
+    def __init__(self, method: MethodDeclarationNode):
+        self.name = method.name
+        self.params = method.params
+        self.returnType = method.returnType
+        self.body = method.body
 
 class TypeConstructorSignatureNode(DeclarationNode):
     def __init__(self, name, params = []):
@@ -46,20 +53,20 @@ class TypeAttributeNode(DeclarationNode):
         self.type = type
 
 class TypeDeclarationNode(DeclarationNode):
-    def __init__(self, signature: TypeConstructorSignatureNode, body, father = 'Object', father_args = []):
+    def __init__(self, signature: TypeConstructorSignatureNode, body, parent = 'Object', father_args = []):
         self.name = signature.name
         self.params = signature.params
-        self.father = father
-        self.father_args = father_args
+        self.parent = parent
+        self.parent_args = father_args
         self.attributes = [attribute for attribute in body if isinstance(attribute, TypeAttributeNode)]
-        self.methods = [method for method in body if isinstance(method, FunctionDeclarationNode)]
+        self.methods = [method for method in body if isinstance(method, MethodDeclarationNode)]
 
 
 class ProtocolDeclarationNode(DeclarationNode):
-    def __init__(self, name, methods_signature: List[MethodSignatureNode], father = None):
+    def __init__(self, name, methods_signature: List[MethodSignatureNode], parent = None):
         self.name = name
         self.methods = methods_signature
-        self.father = father
+        self.parent = parent
 
 class VarDeclarationNode(DeclarationNode):
     def __init__(self, name, value, type = None):
