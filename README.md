@@ -1,0 +1,1 @@
+Para usar el compilador abra una consola desde la carpeta Hulk_Compiler (donde se encuentra main.py) y ejecute el comando: python main.py <archivo.hulk>
