@@ -14,29 +14,6 @@ from tests import customTest, testY, testX, test1, testZ, tests, test1
 from semantic_checking.type_builder import TypeBuilder
 from semantic_checking.type_collector import TypeCollector
 
-# lexer = HulkLexer()
-# parser = HulkParser()
-
-# for i in range(2,7):
-#     tokens = lexer(tests[i-2])
-#     print(tokens)
-#     parse, operations = parser([t.token_type for t in tokens])
-#     ast = evaluate_reverse_parse(parse, operations, tokens)
-#     formatter = FormatVisitor()
-#     print(formatter.visit(ast))
-
-# tokens, errors = lexer(test1)
-# for t in tokens:
-#     print(t)
-# print(errors)
-# print(tokens)
-# parse, operations = parser([t.token_type for t in tokens])
-# ast = evaluate_reverse_parse(parse, operations, tokens)
-# formatter = FormatVisitor()
-# print(formatter.visit(ast))
-
-# print('EXITO')
-
 text ='''
         protocol Serializable {
             serialize(): String;
