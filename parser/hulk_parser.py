@@ -10,17 +10,17 @@ class HulkParser(SLR1Parser):
         super().__init__(G, verbose=True)
 
     def __call__(self, tokens):
-        try:
+        # try:
             mapped_terminals = [tokens_terminals_map[t] for t in tokens]
             derivation, operations, errors = super().__call__(mapped_terminals)
-        except ParserError as error:
-            error_token = tokens[error.token_index]
-            error_text = HulkSyntacticError.Message % error_token.name
-            errors = [HulkSyntacticError(error_text)]
-            # errors = [HulkSyntacticError(error_text, error_token.row, error_token.column)]
-            return None, None, errors
+        # except ParserError as error:
+        #     error_token = tokens[error.token_index]
+        #     error_text = HulkSyntacticError.Message % error_token.Name
+        #     errors = [HulkSyntacticError(error_text, '', '')]
+        #     # errors = [HulkSyntacticError(error_text, error_token.row, error_token.column)]
+        #     return None, None, errors
 
-        return derivation, operations, errors
+            return derivation, operations, errors
 
 
 tokens_terminals_map = {

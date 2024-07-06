@@ -101,7 +101,7 @@ class ShiftReduceParser:
             if((state, lookahead) not in self.action):
                 # print("Automaton didn't recognize w")
                 # print("Stopped at state: " + str(state) + " lookahead: " + str(lookahead))
-                raise ParserError("Chain cannot be parsed", cursor)
+                raise ParserError(f"Chain cannot be parsed, error at {w[cursor]}",cursor)
             action, tag = self.action[state, lookahead]
 
             operations.append(action)
@@ -123,7 +123,7 @@ class ShiftReduceParser:
                 except:
                 #     print("Automaton didn't recognize w")
                 #     print("Stopped at state: " + state + " lookahead: " + lookahead)
-                      raise ParserError("Chain cannot be parsed", cursor)
+                      raise ParserError(f"Chain cannot be parsed, error at {w[cursor]}",cursor)
                 stack.append(state_to_goto)
                 output.append(tag)
             elif(action == self.OK):

@@ -9,4 +9,4 @@ protocol Serializable {
             serialize(): String => "User(name: " @ self.name @ ", age: " @ self.age @ ")";
         }
 
-        let user = new User("Alice", 30) in print(user.serialize())
+        let user = new User("Alice", 30) in print(user.serialize());
