@@ -2,6 +2,7 @@ from typing import List
 from cmp.pycompiler import Grammar
 from cmp.pycompiler import Item
 from cmp.automata import State, lr0_formatter
+from parser.utils import compute_firsts, compute_follows
 
 class ParserError(Exception):
     def __init__(self, text, token_index):
@@ -130,15 +131,17 @@ class SLR1Parser(ShiftReduceParser):
         firsts = compute_firsts(G)
         follows = compute_follows(G, firsts)
     
-        # for key, value in follows.items():
-        #     # Format the string as "key : value"
-        #     line_to_write = f"{key} : {value}\n"
-        #     with open('output.txt', 'a', encoding='utf-8') as file:
-        #         file.write(line_to_write)
+        for key, value in firsts.items():
+            # Format the string as "key : value"
+            line_to_write = f"{key} : {value}\n"
+            with open('output.txt', 'a', encoding='utf-8') as file:
+                file.write(line_to_write)
 
         
         automaton = build_LR0_automaton(G).to_deterministic()
-        # for i, node in enumerate(automaton):
+        for i, node in enumerate(automaton):
+        # Asigna el índice al nodo
+            node.idx = i
         # # Preparando el contenido a escribir
         #     contenido = f"{i}\t\n\t {'\n\t '.join(str(x) for x in node.state)}\n"
     
@@ -148,10 +151,6 @@ class SLR1Parser(ShiftReduceParser):
         #         archivo.write(contenido)
         #         archivo.close()
     
-        # # Asigna el índice al nodo
-        #     node.idx = i
-
-
         for node in automaton:
             idx = node.idx
             for state in node.state:

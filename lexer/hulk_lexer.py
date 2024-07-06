@@ -4,7 +4,7 @@ from lexer.hulk_token_types import TokenType
 from lexer.lexer_error import HulkLexicographicError
 from lexer.lexer_generator import Lexer
 from lexer.regex_tokens import hulk_tokens
-from grammar.Grammar import G
+from grammar.hulk_grammar import G
 
 class HulkLexer(Lexer):
     def __init__(self):

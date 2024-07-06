@@ -1,8 +1,11 @@
 from typing import List, Tuple
+from cmp.semantic import Context
 
 
 class Node:
     pass
+    def evaluate(self, context:Context):
+        raise NotImplementedError()
 
 #--------------------------------------------Depth 1---------------------------------------------
 
@@ -10,6 +13,8 @@ class ProgramNode(Node):
     def __init__(self, declarations, expression):
         self.declarations = declarations
         self.expression = expression
+    def evaluate(self, context:Context):
+        return self.expression.evaluate()
         
 class DeclarationNode(Node):
     pass
@@ -51,6 +56,8 @@ class TypeAttributeNode(DeclarationNode):
         self.name = name
         self.value = value
         self.type = type
+    def evaluate(self, context: Context):
+        self.scope.find_variable(self.name).set_value(self.value.evaluate())
 
 class TypeDeclarationNode(DeclarationNode):
     def __init__(self, signature: TypeConstructorSignatureNode, body, parent = 'Object', father_args = []):
@@ -248,9 +255,6 @@ class ModNode(ArithmeticBinaryNode):
     pass
 
 class PowNode(ArithmeticBinaryNode):
-    pass
-
-class PlusNode(ArithmeticBinaryNode):
     pass
 
 class PositiveNode(ArithmeticUnaryNode):

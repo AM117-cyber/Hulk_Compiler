@@ -1,9 +1,9 @@
 
 from cmp.errors import HulkSyntacticError
 from cmp.utils import Token
-from grammar.Grammar import *
+from grammar.hulk_grammar import *
 from lexer.hulk_token_types import TokenType
-from parsing import ParserError, SLR1Parser
+from parser.parsing import ParserError, SLR1Parser
 
 class HulkParser(SLR1Parser):
     def __init__(self):

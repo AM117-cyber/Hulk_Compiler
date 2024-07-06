@@ -20,25 +20,6 @@ class Lexer:
                 if state.final:
                     state.tag = n, token_type
 
-            # pending = [automata]
-            # visited = []
-            # while pending:
-            #     current = pending.pop()
-            #     visited.append(current)
-            #     if automata.final:
-            #         automata.tag = n, token_type
-            #         print(f'Tag {automata.tag}')
-
-            #     for zz, state in automata.transitions.items():
-            #         print(f'Simbolo {zz} y estado {state}')
-            #         for s in state:
-            #             if s not in visited:
-            #                 pending.append(s)
-                            
-            #     for state in automata.epsilon_transitions:
-            #         if state not in visited:
-            #             pending.append(state)
-
             regexs.append(automata)
 
         return regexs

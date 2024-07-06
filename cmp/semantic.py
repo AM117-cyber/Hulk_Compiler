@@ -233,12 +233,13 @@ class AutoType(Type):
         return isinstance(other, AutoType) or other.name == self.name
 
 
-
 class StringType(Type):
     def __init__(self):
         super().__init__('String')
         self.set_parent(ObjectType())
-
+    
+    def __eq__(self, other):
+        return isinstance(other, StringType) or other.name == self.name
 
 
 class BooleanType(Type):
@@ -246,12 +247,16 @@ class BooleanType(Type):
         super().__init__('Boolean')
         self.set_parent(ObjectType())
 
-
+    def __eq__(self, other):
+        return isinstance(other, BooleanType) or other.name == self.name
 
 class NumberType(Type):
     def __init__(self) -> None:
         super().__init__('Number')
         self.set_parent(ObjectType())
+
+    def __eq__(self, other):
+        return isinstance(other, BooleanType) or other.name == self.name
 
 
 
@@ -395,15 +400,20 @@ class Context:
     def __repr__(self):
         return str(self)
 
+# changed
 class VariableInfo:
     def __init__(self, name, vtype, is_error = False, is_parameter = False):
         self.name = name
         self.type = vtype
         self.is_parameter = is_parameter
         self.is_error = is_error
+        self.value = None
     
-    def set_inferred_type(self, vtype):
+    def set_type(self, vtype):
         self.type = vtype
+    
+    def set_value(self, value):
+        self.value = value
 
 class Scope:
     def __init__(self, parent=None):
@@ -420,8 +430,8 @@ class Scope:
         self.children.append(child)
         return child
 
-    def define_variable(self, vname, vtype):
-        info = VariableInfo(vname, vtype)
+    def define_variable(self, vname, vtype, is_parameter = False):
+        info = VariableInfo(vname, vtype, is_parameter)
         self.locals.append(info)
         return info
 
