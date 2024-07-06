@@ -81,12 +81,17 @@ def run_pipeline(input_path: Path, output_path: Path):
     if lexicographic_errors:
         for err in lexicographic_errors:
             print_error(err)
-        raise Exception()
+        return
     
     print(tokens)
     print('=================== PARSE =====================')
     parser = HulkParser()
-    derivations, operations = parser([t.token_type for t in tokens])
+    derivations, operations, build_table_errors = parser([t.token_type for t in tokens])
+    if build_table_errors:
+        print_error("Grammar is not SLR(1)")
+        for err in build_table_errors:
+            print_error(f"There is a conflict at state {err.key}: current value is {err.prev_value} and tried to insert the new value {err.new_value}")
+        return
     print('\n'.join(repr(x) for x in derivations))
     print('==================== AST ======================')
     ast = evaluate_reverse_parse(derivations, operations, tokens)

@@ -47,7 +47,12 @@ class Regex:
         return tokens
     
     def get_regex_ast(self):
-        parse, operations = self.regex_parser([t.token_type for t in self.tokens])
+        parse, operations, build_table_errors = self.regex_parser([t.token_type for t in self.tokens])
+        if build_table_errors:
+            print("Grammar is not SLR(1)")
+            for err in build_table_errors:
+                print(f"There is a conflict at state {err.key}: current value is {err.prev_value} and tried to insert the new value {err.new_value}")
+            raise Exception()
         ast = evaluate_reverse_parse(parse, operations, self.tokens)
         
         return ast
