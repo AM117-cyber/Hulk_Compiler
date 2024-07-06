@@ -61,28 +61,4 @@ class TypeCollector(object):
         iterable_protocol.define_method('current',[],[],ObjectType())
 
 
-       
-
-
-
-
-
-    #     type Range(min:Number, max:Number) {
-    # min = min;
-    # max = max;
-    # current = min - 1;
-
-    # next(): Boolean => (self.current := self.current + 1) < max;
-    # current(): Number => self.current;
-# }
-    #     protocol Iterable {
-    # next() : Boolean;
-    # current() : Object;
-
-
-#         sqrt(<value>) computes the square root if a value.
-# sin(<angle>) computes the sine of an angle in radians.
-# cos(<angle>) computes the cosine of an angle in radians.
-# exp(<value>) computes the value of e raised to a value.
-# log(<base>, <value>) computes the logarithm of a value in a given base.
-# rand()  
+    
