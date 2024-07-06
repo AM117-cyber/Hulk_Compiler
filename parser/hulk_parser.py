@@ -16,8 +16,8 @@ class HulkParser(SLR1Parser):
         except ParserError as error:
             error_token = tokens[error.token_index]
             error_text = HulkSyntacticError.Message % error_token.name
-            
-            errors = [HulkSyntacticError(error_text, error_token.row, error_token.column)]
+            errors = [HulkSyntacticError(error_text)]
+            # errors = [HulkSyntacticError(error_text, error_token.row, error_token.column)]
             return None, None, errors
 
         return derivation, operations, errors
