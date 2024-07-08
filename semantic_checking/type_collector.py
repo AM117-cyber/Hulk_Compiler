@@ -60,5 +60,3 @@ class TypeCollector(object):
         iterable_protocol.define_method('next',[],[],BooleanType())
         iterable_protocol.define_method('current',[],[],ObjectType())
 
-
-    

@@ -11,8 +11,8 @@ NO_PROTOCOL_PARAM_TYPE = 'A type must be annoted for parameter "%s" in method "%
 NOT_DEFINED_ATTRIBUTE_TYPE = 'Type "%s" of attribute "%s" in "%s" is not defined.'
 NOT_DEFINED_METHOD_RETURN_TYPE = 'Return type "%s" of method "%s" in "%s" is not defined.'
 NOT_DEFINDED_FUNCTION_RETURN_TYPE = 'Return type "%s" of function "%s" is not defined.'
-NOT_DEFINED_METHOD_PARAM_TYPE = 'Type "%s" of parameter "%s" in method "%s" in "%s" is not defined.'
-NOT_DEFINED_FUNCTION_PARAM_TYPE = 'Type "%s" of parameter "%s" in function "%s" is not defined.'
+NOT_DEFINED_METHOD_PARAM_TYPE = 'Type "%s" of parameter"%s" in method "%s" in "%s" is not defined.'
+NOT_DEFINED_FUNCTION_PARAM_TYPE = 'Type "%s" of parameter"%s" in function "%s" is not defined.'
 NOT_DEFINED_TYPE_CONSTRUCTOR_PARAM_TYPE = 'Type "%s" of param "%s" in type "%s" declaration is not defined.'
 INVALID_INHERITANCE_FROM_DEFAULT_TYPE = 'Type "%s" can not inherite from Hulk Type "%s".'
 INVALID_CIRCULAR_INHERITANCE = '"%s" can not inherite from type "%s". Circular inheritance is not allowed.'
@@ -40,7 +40,7 @@ class TypeBuilder:
     @visitor.when(TypeDeclarationNode)
     def visit(self, node: TypeDeclarationNode): 
         current_type = self.context.get_type(node.name)
-        if current_type.is_error():
+        if ErrorType() == current_type:
             return
         self.current_type = current_type
         param_types = []
@@ -63,7 +63,7 @@ class TypeBuilder:
             param_types.append(param_type)
         self.current_type.set_params(param_names,param_types)
 
-        if node.parent in ['String','Boolean','Number','Vector']:
+        if node.parent in ['String','Boolean','Number']:
             self.errors.append(INVALID_INHERITANCE_FROM_DEFAULT_TYPE%(self.current_type.name,node.parent))
             parent = ErrorType()
         else:
@@ -155,13 +155,16 @@ class TypeBuilder:
         try:
             type = self.context.get_type_or_protocol(node.type) if node.type is not None else AutoType()
         except:
-            self.errors.append(NOT_DEFINED_ATTRIBUTE_TYPE%(node.type,node.name,self.current_type.name))
+            self.errors.append(NOT_DEFINED_ATTRIBUTE_TYPE%(node.type,node.name,self.current_type))
             type = ErrorType()
         try:
             self.current_type.define_attribute(node.name,type)
         except SemanticError as error:
             self.errors.append(error)
             self.current_type.set_attribute_error(node.name)
+            # self.attributes.get_attribute(node.name).set_attribute_error()
+            
+            
 
     @visitor.when(MethodDeclarationNode)
     def visit(self, node: MethodDeclarationNode):   
@@ -169,7 +172,6 @@ class TypeBuilder:
             return_type = self.context.get_type_or_protocol(node.returnType) if node.returnType is not None else AutoType()
         except SemanticError as error:
             self.errors.append(NOT_DEFINED_METHOD_RETURN_TYPE%(node.returnType,node.name,self.current_type.name))
-            return_type = ErrorType()
         param_types = []
         param_names = []
         names_count = {}
@@ -196,7 +198,7 @@ class TypeBuilder:
             self.current_type.set_method_error(node.name)
 
     @visitor.when(MethodSignatureNode)
-    def visit(self, node: MethodSignatureNode): 
+    def visit(self, node: MethodDeclarationNode): 
         if node.returnType is None:
             self.errors.append(NO_PROTOCOL_RETURN_TYPE%(node.name,self.current_type.name))
             return_type = ErrorType()
@@ -223,7 +225,7 @@ class TypeBuilder:
                 try:
                     param_type = self.context.get_type_or_protocol(param[1])
                 except SemanticError as error:
-                    self.errors.append(NOT_DEFINED_METHOD_PARAM_TYPE%(param[1], param[0],node.name,self.current_type.name))
+                    self.errors.append(NOT_DEFINED_METHOD_PARAM_TYPE%(param[0],node.name,self.current_type.name))
                     param_type = ErrorType()
             param_names.append(param[0])
             param_types.append(param_type)

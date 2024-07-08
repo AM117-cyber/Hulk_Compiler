@@ -5,7 +5,7 @@ from grammar.ast_nodes import *
 from cmp.semantic import *
 
 INCOMPATIBLE_TYPES = 'Cannot convert "%s" into "%s".'
-WRONG_METHOD_RETURN_TYPE = 'Method "%s" in type "%s" return type is "%s" but it returns "%s"'
+WRONG_METHOD_RETURN_TYPE = 'Method "%s" in type "%s" has declared return type "%s" but returns "%s"'
 WRONG_FUNCTION_RETURN_TYPE = 'Function "%s" return type is "%s" but it returns "%s"'
 VARIABLE_IS_DEFINED = 'Variable "%s" is already defined in this scope'
 WRONG_SIGNATURE = 'Method "%s" already defined in "%s" with a different signature.'
@@ -17,14 +17,16 @@ INVALID_OPERATION = 'Operation is not defined between "%s" and "%s".'
 INVALID_IS_OPERATION = 'Invalid "IS" operation: "%s" is not a type'
 INVALID_CAST_OPERATION = 'Cast operation is not defined between "%s" and "%s"'
 INVALID_UNARY_OPERATION = 'Operation is not defined for "%s"'
-VECTOR_OBJECT_DIFFERENT_TYPES = 'Types "%s" and "%s" are different in a vector'
-INVALID_INDEXING = 'Cannot indexing in the "%s" variable'
-INVALID_POSITION_INDEXING = 'Vector index cannot be a "%s"'
+VECTOR_OBJECT_DIFFERENT_TYPES = 'Vector is conformed by different types'
+INVALID_INDEXING = 'Can not index into a "%s"'
+INVALID_INDEXING_OPERATION = 'An index can not be a "%s"'
 NOT_DEFINED = 'Variable "%s" is not defined'
 INVALID_TYPE_ARGUMENTS = 'Type of param "%s" is "%s" in "%s" but it is being called with type"%s" '
 INVALID_LEN_ARGUMENTS = '"%s" has %s parameters but it is being called with "%s" arguments'
-PRIVATE_ATTRIBUTE = 'Attribute "%s" in type "%s" is private. All attributes are private'
-NOT_CONFORMS_TO = '"%s" does not conforms to "%s"'
+PRIVATE_ATTRIBUTE = 'Cannot access attribute "%s" in type "%s" is private. All attributes are private'
+NOT_CONFORMS_TO = '"%s" does not conform to "%s"'
+INVALID_OVERRIDE = 'Method "%s" can not be overridden in class "%s".It is already defined in with a different signature.'
+
 
 class TypeChecker:
     def __init__(self, context, errors=[]):
@@ -58,39 +60,74 @@ class TypeChecker:
         if self.current_type.is_error():
             return
         
-        for name, type in zip(self.current_type.param_names, self.current_type.param_types):
-            scope.define_variable(name, type, True)
-        child = scope.create_child()
+        if(len(self.current_type.param_types)>0):
+            for name, type in zip(self.current_type.param_names, self.current_type.param_types):
+                scope.define_variable(name, type, True)
+            # child = scope.create_child()
 
+            if not self.current_type.parent.is_error():
+                parent_param_types = self.current_type.parent.param_types
+
+                if len(node.parent_args) != len(parent_param_types):
+                    self.errors.append(INVALID_LEN_ARGUMENTS%(self.current_type.parent.name,len(parent_param_types),len(node.parent_args)))
+                    # return ErrorType()
+                else:
+                    for index,(param_type,arg) in enumerate(zip(parent_param_types,node.parent_args)):
+                        arg_type = self.visit(arg, scope)
+                        try:
+                            param_type = self.assign_type(param_type,arg_type)
+                            # if param_type.is_error():
+                            #     return ErrorType()
+                        except SemanticError:
+                            self.errors.append(SemanticError(INVALID_TYPE_ARGUMENTS%(index, param_type.name ,arg_type.name))) 
+                            # return ErrorType() 
+        else:
+            param_names, param_types = self.current_type.find_params()
+            for param_name, param_type in zip(param_names,param_types):
+                scope.define_variable(param_name,param_type, True)
+            self.current_type.set_params(param_names,param_types)
+            
+            
         for attribute in node.attributes:
             try:
-                self.visit(attribute, child) 
+                self.visit(attribute, scope) 
             except SemanticError as error:
                 self.errors.append(error)
         for method in node.methods:
             try:
-                self.visit(method, child.create_child()) 
+                self.visit(method, scope.create_child()) 
             except SemanticError as error:
                 self.errors.append(error)
         
 
     @visitor.when(TypeAttributeNode)
     def visit(self, node: TypeAttributeNode, scope: Scope):
+        self.current_method = None
         attribute: Attribute = self.current_type.get_attribute(node.name)
-        expr_type = self.visit(node.value)
-        var_type = attribute.type
-        try:
-            var_type = self.assign_type(var_type,expr_type)
-        except SemanticError: 
-            self.errors.append(SemanticError(INCOMPATIBLE_TYPES%(expr_type,attribute.type.name)))
-            var_type = ErrorType()
-        scope.define_variable(node.name,var_type)
-        attribute.set_type(var_type)
-        return var_type
+        expr_type = self.visit(node.value, scope)
+        if(not attribute.is_error()):
+            var_type = attribute.type
+            try:
+                var_type = self.assign_type(var_type,expr_type)
+            except SemanticError: 
+                self.errors.append(SemanticError(INCOMPATIBLE_TYPES%(expr_type.name,attribute.type.name)))
+                # var_type = ErrorType()
+            # scope.define_variable(node.name,var_type)
+            else:
+                attribute.set_type(var_type)
+    
 
     @visitor.when(MethodDeclarationNode)
     def visit(self, node: MethodDeclarationNode, scope: Scope):
         self.current_method = self.current_type.get_method(node.name)
+        try:
+            parent_method = self.current_type.parent.get_method(node.name)
+        except:
+            pass
+        else:
+            if self.current_method != parent_method:
+                self.errors.append(INVALID_OVERRIDE%(node.name,self.current_type.name))
+
         if self.current_method.is_error():
             return
         
@@ -104,8 +141,9 @@ class TypeChecker:
             return_type = self.assign_type(return_type,expr_type)
         except:
             self.errors.append(WRONG_METHOD_RETURN_TYPE%(self.current_method.name,self.current_type.name,self.current_method.return_type.name,expr_type.name))
-            return_type = ErrorType()
-        self.current_method.set_return_type(return_type)
+            # return_type = ErrorType()
+        else:
+            self.current_method.set_return_type(return_type)
 
     @visitor.when(FunctionDeclarationNode)
     def visit(self, node: FunctionDeclarationNode, scope: Scope):
@@ -124,37 +162,42 @@ class TypeChecker:
             return_type = self.assign_type(return_type,expr_type)
         except:
             self.errors.append(WRONG_FUNCTION_RETURN_TYPE%(self.current_method.name,self.current_method.return_type.name,expr_type.name))
-            return_type = ErrorType()
-        self.current_method.set_return_type(return_type)
+            # return_type = ErrorType()
+        else:
+            self.current_method.set_return_type(return_type)
 
 
     @visitor.when(VarDeclarationNode)
     def visit(self, node: VarDeclarationNode, scope: Scope):
         if scope.is_local(node.name):
             self.errors.append(VARIABLE_IS_DEFINED%(node.name))
-            var = scope.find_variable(node.name)
-            var.set_type(ErrorType())
+            # var = scope.find_variable(node.name)
+            # var.set_type(ErrorType())
+            #No sé si poner error a tomar que la única variable es la primera que se declaró
+            return
         else:
             try:
-                var_type = self.context.get_type(node.type) if var_type is not None else AutoType()
+                var_type = self.context.get_type_or_protocol(node.type) if node.type is not None else AutoType()
             except SemanticError as error:
                 self.errors.append(error)
                 var_type = ErrorType()
             else:
+                expr_type = self.visit(node.value, scope)
                 try:
-                    expr_type = self.visit(node.value)
                     var_type = self.assign_type(var_type,expr_type)
                 except:
-                    self.errors.append(INCOMPATIBLE_TYPES%(expr_type.name,var_type))
-                    var_type = ErrorType()
-            scope.define_variable(node.name, var_type, node.value)
+                    self.errors.append(INCOMPATIBLE_TYPES%(expr_type.name,var_type.name))
+                    # var_type = ErrorType()
+                else:
+                    scope.define_variable(node.name, var_type)
 
     def assign_type(self,var_type, expr_type):
-        if var_type.is_error() or expr_type.is_error():
-            return ErrorType()
-        elif var_type.is_auto():
+        # if var_type.is_error() 
+        # # or expr_type.is_error():
+        #     return ErrorType()
+        if var_type.is_auto():
             return expr_type
-        elif not expr_type.conforms_to(var_type):
+        elif not var_type.is_error() and not expr_type.is_error() and not expr_type.conforms_to(var_type):
             raise SemanticError('Error')
             
 #_____________________________________________________________________________________________________________________________________
@@ -162,6 +205,8 @@ class TypeChecker:
 
     @visitor.when(ConditionalNode)
     def visit(self, node: ConditionalNode, scope: Scope):
+        expressions = node.expressions +[node.default]
+
         for index,condition in enumerate(node.conditions):
             condition_type = self.visit(condition, scope)
             if not condition_type.is_error() and not condition_type.is_auto() and BooleanType != condition_type:
@@ -169,7 +214,6 @@ class TypeChecker:
             if condition == 'true':
                 return self.visit(expressions[index])
             
-        expressions = node.expressions +[node.default]
         types = [self.visit(expr,scope) for expr in expressions]
         return get_lowest_common_ancestor(types)
     
@@ -177,7 +221,7 @@ class TypeChecker:
     def visit(self, node: LetInNode, scope: Scope):
         child = scope.create_child()
         for var_declaration in node.variables:
-            self.visit(var_declaration,scope)
+            self.visit(var_declaration,child)
         return self.visit(node.body,child)
 
     
@@ -187,30 +231,22 @@ class TypeChecker:
         if BooleanType() != condition_type or not condition_type.is_auto():
             if not condition_type.is_error(): 
                 self.errors.append(SemanticError(INCOMPATIBLE_TYPES%(condition_type.name, 'Boolean')))
-            return ErrorType()
-        
-        body_type = self.visit(node.body, scope)
-        return body_type
+            # return ErrorType()
+            #No sé si retornar un error si el tipo de la condición no es booleano
+        return self.visit(node.body,scope)
 
     @visitor.when(ForNode)
     def visit(self, node: ForNode, scope: Scope):
         child_scope = scope.create_child()
         items_type = [self.visit(item, child_scope) for item in node.iterable]
-        iterable_type = None
-        count_auto = 0
-        for item in items_type:
-            if item.is_auto():
-                count_auto += 1
-            elif iterable_type is None and item is not None and not item.is_error():
-                iterable_type = item
-            elif iterable_type is not None and item != iterable_type and not item.is_error():
-                self.errors.append(SemanticError(VECTOR_OBJECT_DIFFERENT_TYPES%(iterable_type.name, item.name)))
-                return ErrorType()
-        if count_auto == len(items_type):
-            iterable_type = AutoType()
-        
-        child_scope.define_variable(node.item.lex, iterable_type)
-
+        try:
+            iterable_type = get_vector_type(items_type)
+        except:
+            self.errors.append(SemanticError(VECTOR_OBJECT_DIFFERENT_TYPES))
+            child_scope.define_variable(node.item, ErrorType())
+            # return ErrorType()
+        else:
+            child_scope.define_variable(node.item, iterable_type)
         body_type = self.visit(node.body, child_scope)
         return body_type
 
@@ -220,13 +256,16 @@ class TypeChecker:
         var_type = self.visit(node.var, scope)
         if var_type.is_error():
             return var_type
+        
         expr_type = self.visit(node.expr, scope)
+        if var_type == self.current_type:
+            self.errors.append(SemanticError(SELF_IS_READONLY))
+            return ErrorType()
         if expr_type.is_error():
             return var_type
         if not expr_type.conforms_to(var_type):
             self.errors.append(SemanticError(INCOMPATIBLE_TYPES%(expr_type.name,var_type.name)))
-        else:
-            return var_type
+        return var_type
 
 #_________________________________________________________________________________________________________________________
 #________________________________________________Binary__________________________________________________________________
@@ -237,8 +276,8 @@ class TypeChecker:
         right_type = self.visit(node.right)
 
         if left_type.is_error() or right_type.is_error():
-            return ErrorType()
-
+            return BooleanType()
+        
         if BooleanType() == left_type == right_type or \
             NumberType() == left_type == right_type or \
             AutoType() == left_type == right_type or \
@@ -247,8 +286,8 @@ class TypeChecker:
             BooleanType() == left_type and right_type.is_auto() or \
             left_type.is_auto() and BooleanType() ==right_type:
             return BooleanType()
-        self.errors(SemanticError(INVALID_OPERATION(left_type,right_type)))
-        return ErrorType()
+        self.errors(SemanticError(INVALID_OPERATION(left_type.name,right_type.name)))
+        return BooleanType()
     
     @visitor.when(ComparisonBinaryNode)
     def visit(self, node:ComparisonBinaryNode, scope: Scope):
@@ -256,18 +295,18 @@ class TypeChecker:
         right_type = self.visit(node.right)
 
         if left_type.is_error() or right_type.is_error():
-            return ErrorType()
+            return BooleanType()
         if NumberType() == left_type == right_type or\
             AutoType() == left_type == right_type or\
             left_type.is_auto and NumberType() == right_type or\
             NumberType() == left_type and right_type.is_auto():
             return BooleanType()
         elif left_type.is_auto():
-            left_type = NumberType
+            left_type = NumberType()
         elif right_type.is_auto():
             right_type = NumberType()
         self.errors(SemanticError(INVALID_OPERATION(left_type,right_type)))
-        return ErrorType()
+        return BooleanType()
     
     @visitor.when(ArithmeticBinaryNode)
     def visit(self, node: ArithmeticBinaryNode, scope: Scope):
@@ -277,23 +316,10 @@ class TypeChecker:
         if (NumberType() == left_type or left_type.is_auto()) and (NumberType() == right_type or right_type.is_auto()):
             return NumberType()
         elif left_type.is_error() or right_type.is_error():
-            return ErrorType()
+            return NumberType()
         
         self.errors.append(SemanticError(INVALID_OPERATION%(left_type.name, right_type.name)))
-        return ErrorType()
-
-    @visitor.when(BooleanUnaryNode)
-    def visit(self, node: BooleanUnaryNode, scope: Scope):
-        operand_type = self.visit(node.operand, scope)
-
-        if BooleanType() == operand_type or operand_type.is_auto():
-            return BooleanType()
-        elif not operand_type.is_error():
-            self.errors.append(SemanticError(INVALID_UNARY_OPERATION%(operand_type.name)))
-
-        return ErrorType()
-    
-
+        return NumberType()
     
     @visitor.when(BooleanBinaryNode)
     def visit(self, node: BooleanBinaryNode, scope: Scope):
@@ -303,22 +329,30 @@ class TypeChecker:
         if (BooleanType() == left_type or left_type.is_auto()) and (BooleanType() == right_type or right_type.is_auto()):
             return BooleanType()
         elif left_type.is_error() or right_type.is_error():
-            return ErrorType()
+            return BooleanType()
         
         self.errors.append(SemanticError(INVALID_OPERATION%(left_type.name, right_type.name)))
-        return ErrorType()
+        return BooleanType()
     
 
     @visitor.when(CheckTypeNode)
     def visit(self, node:CheckTypeNode, scope: Scope):
+        #no estoy segura de si esto puede pasar
         if self.visit(node.left).is_error():
-            return ErrorType()
+            return BooleanType()
         try:
-            right_value = self.context.get_type_or_protocol(node.right) 
+            self.context.get_type_or_protocol(node.right) 
         except SemanticError as error:
             self.errors.append(SemanticError(INVALID_IS_OPERATION(node.right))+" "+ error)
-            return ErrorType()
         return BooleanType()
+    
+    @visitor.when(StringBinaryNode)
+    def visit(self, node:StringBinaryNode, scope:Scope):
+        left_type = self.visit(node.left)
+        right_type = self.visit(node.right)
+        if left_type not in [StringType(),BooleanType(),NumberType(), AutoType(), ErrorType()] or right_type not in [StringType(),BooleanType(),NumberType(), AutoType(), ErrorType()]:
+            self.errors.append(INVALID_OPERATION%(left_type.name,right_type.name))
+        return StringType()
 
 #_________________________________________________________________________________________________________________________
 #_________________________________________________Atoms__________________________________________________________________
@@ -344,122 +378,109 @@ class TypeChecker:
             self.errors.append(INVALID_LEN_ARGUMENTS%(function.name,len(function.param_types),len(node.arguments)))
             return ErrorType()
         else:
-            for index,param_type,arg in enumerate(zip(function.param_types,node.arguments)):
+            for index,(param_type,arg) in enumerate(zip(function.param_types,node.arguments)):
                 arg_type = self.visit(arg, scope)
                 try:
                     param_type = self.assign_type(param_type,arg_type)
-                    if param_type.is_error():
-                        return ErrorType()
+                    # if param_type.is_error():
+                    #     return ErrorType()
                 except SemanticError:
                     self.errors.append(SemanticError(INVALID_TYPE_ARGUMENTS%(function.param_names[index], function.param_types[index].name,arg_type.name))) 
-                    return ErrorType() 
+                    # return ErrorType() 
         return function.return_type
 
     @visitor.when(TypeInstantiationNode)
     def visit(self, node: TypeInstantiationNode, scope: Scope):
-        for argument in node.arguments:
-            if ErrorType() == self.visit(argument, scope):
-                return ErrorType()
-        type = self.context.get_type(node.name)   
-
-        if len(function.param_types) != len(node.arguments):
-            self.errors.append(INVALID_LEN_ARGUMENTS%(function.name,len(function.param_types),len(node.arguments)))
-            return ErrorType()
-
-        for index,param_type,arg in enumerate(zip(type.param_types,node.arguments)):
-                arg_type = self.visit(arg, scope)
-                try:
-                    param_type = self.assign_type(param_type,arg_type)
-                    if param_type.is_error():
-                        return ErrorType()
-                except SemanticError:
-                    self.errors.append(SemanticError(INVALID_TYPE_ARGUMENTS%(function.param_names[index], function.param_types[index].name,arg_type.name))) 
-                    return ErrorType() 
-        
+        # for argument in node.arguments:
+        #     if ErrorType() == self.visit(argument, scope):
+        #         return ErrorType()
         try:
-            type_inst = self.context.get_type(node.name)
+            type= self.context.get_type(node.name)
         except SemanticError as error:
             self.errors.append(SemanticError(error))
-            return ErrorType
+            return ErrorType()  
 
-        return type_inst
+        param_types = type.param_types
+        if len(node.arguments) != len(param_types):
+            self.errors.append(INVALID_LEN_ARGUMENTS%(type.name,len(type.param_types),len(node.arguments)))
+            # return ErrorType()
+        for index, (param_type, arg) in enumerate(zip(param_types, node.arguments)):
+            arg_type = self.visit(arg, scope)
+            try:
+                param_type = self.assign_type(param_type,arg_type)
+                # if param_type.is_error():
+                #     return ErrorType()
+            except SemanticError:
+                self.errors.append(SemanticError(INVALID_TYPE_ARGUMENTS%(index, param_type.name.name,arg_type.name))) 
+                # return ErrorType() 
+        return type
 
     @visitor.when(ExplicitVectorNode)
     def visit(self, node: ExplicitVectorNode, scope: Scope):
         items_type = [self.visit(item, scope) for item in node.items]
-        iterable_type = None
-        count_auto = 0
-        for item in items_type:
-            if item.is_auto():
-                count_auto += 1
-            elif iterable_type is None and item != iterable_type:
-                iterable_type = item
-            elif iterable_type is not None and item != iterable_type:
-                self.errors.append(SemanticError(VECTOR_OBJECT_DIFFERENT_TYPES%(iterable_type.name, item.name)))
-                return ErrorType()
-        if count_auto == len(items_type):
-            iterable_type = AutoType()
-        
-        return iterable_type
+        try:
+            iterable_type = get_vector_type(items_type)
+        except:
+            self.errors.append(SemanticError(VECTOR_OBJECT_DIFFERENT_TYPES))
+            return ErrorType()
+        #OJO No sé si retornar ErrorType()
+        return VectorType(iterable_type)
     
     # changed 
     @visitor.when(ImplicitVectorNode)
     def visit(self, node: ImplicitVectorNode, scope: Scope):
         child_scope = scope.create_child()
         items_type = [self.visit(item, child_scope) for item in node.iterable]
-        iterable_type = None
-        count_auto = 0
-        for item in items_type:
-            if item.is_error():
-                return ErrorType()
-            elif item.is_auto():
-                count_auto += 1
-            elif iterable_type is None and item != iterable_type:
-                iterable_type = item
-            elif iterable_type is not None and item != iterable_type:
-                self.errors.append(SemanticError(VECTOR_OBJECT_DIFFERENT_TYPES%(iterable_type.name, item.name)))
-                return ErrorType()
-        if count_auto == len(items_type):
-            iterable_type = AutoType()
+        try:
+            iterable_type = get_vector_type(items_type)
+        except:
+            self.errors.append(SemanticError(VECTOR_OBJECT_DIFFERENT_TYPES))
+            return ErrorType()
         
-        child_scope.define_variable(node.item.lex, iterable_type)
-
+        child_scope.define_variable(node.item, iterable_type)
         expr_type = self.visit(node.expr, child_scope)
-        return expr_type
+        return VectorType(expr_type)
 
+    
     @visitor.when(IndexObjectNode)
     def visit(self, node: IndexObjectNode, scope: Scope):
         pos_type = self.visit(node.pos, scope)
-        if NumberType() != pos_type:
-            self.errors.append(INVALID_POSITION_INDEXING%(pos_type.name))
-            return ErrorType()
+        if NumberType() != pos_type or not pos_type.is_auto() and not pos_type.is_error():
+            self.errors.append(INVALID_INDEXING_OPERATION%(pos_type))
+            # return ErrorType()
         
         object_type = self.visit(node.object, scope)
         if object_type.is_error():
             return ErrorType()
-        elif StringType() != object_type or not isinstance(node.object, list):
-            self.errors.append(INVALID_INDEXING%(node.object.lex))
-            return ErrorType()
-        
-        return object_type
+        elif not object_type.conforms_to(self.context.get_protocol('Iterable')):
+            self.errors.append(INVALID_INDEXING%(object_type))
+            # return ErrorType()
+        # else:
+        return self.object_type.get_method('current').return_type
 
     @visitor.when(CallMethodNode)
     def visit(self, node:CallMethodNode, scope: Scope):
         owner = self.visit(node.inst_name)
-        method = owner.get_method(node.method_name)
+        try:
+            method = owner.get_method(node.method_name)
+        except SemanticError as error:
+            self.errors.append(SemanticError(error))
+            return ErrorType()
+        if method.is_error():
+            return ErrorType()
         if len(method.param_types) != len(node.method_args):
             self.errors.append(INVALID_LEN_ARGUMENTS%(method.method_name,len(method.param_types),len(node.method_args)))
-            return ErrorType()
+            # return ErrorType()
         else:
-            for index, param_type, arg in enumerate(zip(method.param_types,node.method_args)):
+            for index, (param_type, arg) in enumerate(zip(method.param_types,node.method_args)):
                 arg_type = self.visit(arg,scope)
                 try:
                     self.assign_type(param_type,arg_type)
-                    if param_type.is_error():
-                        return ErrorType()
+                    # if param_type.is_error():
+                    #     return ErrorType()
                 except SemanticError:
                     self.errors.append(SemanticError(INVALID_TYPE_ARGUMENTS%(method.param_names[index], method.param_types[index].name,arg_type.name))) 
-                    return ErrorType()
+                    # return ErrorType()
         return method.return_type
 
     @visitor.when(CallTypeAttributeNode)
@@ -470,33 +491,42 @@ class TypeChecker:
         if owner != self.current_type:
             self.errors.append(SemanticError(PRIVATE_ATTRIBUTE%(node.attribute, owner.name)))
             return ErrorType()
-        return owner.get_attribute(node.attribute)
+        try:
+            attribute = owner.get_attribute(node.attribute)
+        except SemanticError as error:
+            self.errors.append(SemanticError(error))
+            return ErrorType()
+        else:
+            return attribute.type
+        
+    
     
     @visitor.when(CastTypeNode)
     def visit(self, node:CastTypeNode, scope: Scope):
         inst_type = self.visit(node.inst_name, scope)
-        
         if inst_type.is_error():
             return ErrorType()
         
-        if Protocol() == inst_type:
+        if isinstance(inst_type,Type):
             try:
-                type_cast = self.context.get_protocol(node.type_cast) 
-            except SemanticError:
-                self.errors.append(INVALID_CAST_OPERATION%(inst_type.name,node.type_cast))
+                type_cast = self.context.get_type(node.type_cast)
+            except SemanticError as error:
+                self.errors.append(SemanticError(error))
                 return ErrorType()
             else:
                 if not type_cast.conforms_to(inst_type):
-                    self.errors.append(SemanticError(NOT_CONFORMS_TO%(type_cast.name,inst_type.name)+INVALID_CAST_OPERATION%(inst_type.name,node.type_cast)))
-        elif isinstance(inst_type,Type):
+                    self.errors.append(SemanticError(NOT_CONFORMS_TO%(type_cast.name,inst_type.name)+INVALID_CAST_OPERATION%(inst_type.name,type_cast.name)))
+        else:
             try:
                 type_cast = self.context.get_type_or_protocol(node.type_cast)
-            except SemanticError:
-                self.errors.append(INVALID_CAST_OPERATION%(inst_type.name,node.type_cast))
+            except SemanticError as error:
+                self.errors.append(SemanticError(error))
                 return ErrorType()
             else:
                 if not type_cast.conforms_to(inst_type):
-                    self.errors.append(SemanticError(NOT_CONFORMS_TO%(type_cast.name,inst_type.name)+INVALID_CAST_OPERATION%(inst_type.name,node.type_cast)))
+                    self.errors.append(SemanticError(NOT_CONFORMS_TO%(type_cast.name,inst_type.name)+INVALID_CAST_OPERATION%(inst_type.name,type_cast.name)))
+        #No sé si retornar error o type_cast
+        return type_cast
 
 #_________________________________________________________________________________________________________________________
 #_________________________________________________Unary__________________________________________________________________
@@ -509,8 +539,19 @@ class TypeChecker:
             return NumberType()
         elif not operand_type.is_error():
             self.errors.append(SemanticError(INVALID_UNARY_OPERATION%(operand_type.name)))
+        return NumberType()
 
-        return ErrorType()
+    
+    @visitor.when(BooleanUnaryNode)
+    def visit(self, node: BooleanUnaryNode, scope: Scope):
+        operand_type = self.visit(node.operand, scope)
+
+        if BooleanType() == operand_type or operand_type.is_auto():
+            return BooleanType()
+        elif not operand_type.is_error():
+            self.errors.append(SemanticError(INVALID_UNARY_OPERATION%(operand_type.name)))
+        return BooleanType()
+    
 
 #_________________________________________________________________________________________________________________________
 #__________________________________________________Literals__________________________________________________________________
@@ -534,7 +575,11 @@ class TypeChecker:
         var = scope.find_variable(node.lex)
         if var is None:
             if node.lex == 'self':
-                return self.current_type
+                if(self.current_type is not None and self.current_method is not None):
+                    return self.current_type
+                else:
+                    self.errors.append('"self" is not defined in this context')
+                    return ErrorType()
             else:
                 self.errors.append(SemanticError(NOT_DEFINED%(node.lex)))
                 return ErrorType()
