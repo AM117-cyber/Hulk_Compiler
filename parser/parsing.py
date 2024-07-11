@@ -149,14 +149,14 @@ class SLR1Parser(ShiftReduceParser):
         for i, node in enumerate(automaton):
         # Asigna el índice al nodo
             node.idx = i
-        # Preparando el contenido a escribir
-            contenido = f"{i}\t\n\t {'\n\t '.join(str(x) for x in node.state)}\n"
+        # # Preparando el contenido a escribir
+        #     contenido = f"{i}\t\n\t {'\n\t '.join(str(x) for x in node.state)}\n"
     
-        # Abre el archivo en modo de anexación ('a'), especificando la codificación UTF-8
-            with open('states.txt', 'a', encoding='utf-8') as archivo:
-        # Escribe el contenido en el archivo
-                archivo.write(contenido)
-                archivo.close()
+        # # Abre el archivo en modo de anexación ('a'), especificando la codificación UTF-8
+        #     with open('states.txt', 'a', encoding='utf-8') as archivo:
+        # # Escribe el contenido en el archivo
+        #         archivo.write(contenido)
+        #         archivo.close()
     
         for node in automaton:
             idx = node.idx

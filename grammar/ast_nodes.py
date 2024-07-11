@@ -99,7 +99,9 @@ class VarDeclarationNode(DeclarationNode):
 class ConditionalNode(ExpressionNode):
     def __init__(self,conditions_expr: List[Tuple]):
         self.default = (conditions_expr.pop())[1]
-        self.conditions, self.expressions = zip(*conditions_expr)
+        conditions,expressions = zip(*conditions_expr)
+        self.conditions = list(conditions)
+        self.expressions = list(expressions)
     def evaluate(self, context: Context):
         for cond, expr in zip(self.conditions, self.expressions):
             cond_value, _ = cond.evaluate(context)
