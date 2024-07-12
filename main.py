@@ -8,11 +8,6 @@ from grammar.hulk_grammar import G
 from lexer.hulk_lexer import HulkLexer
 from parser.evaluation import evaluate_reverse_parse
 from parser.hulk_parser import HulkParser
-<<<<<<< HEAD
-from cmp.ast import get_printer
-# from tests import customTest, testY, testX, test1, testZ, tests, test1
-=======
->>>>>>> 3011d74be2937ecc5f6d5857dea47333108d2a88
 from semantic_checking.type_builder import TypeBuilder
 from semantic_checking.type_checker import TypeChecker
 from semantic_checking.type_collector import TypeCollector
@@ -262,7 +257,6 @@ def print_error(message):
     refresh = "\033[0m"
     print(f"{red}{message}{refresh}")
 
-<<<<<<< HEAD
 # def run_pipeline(input_path: Path, output_path: Path):
 #     if not input_path.match('*.hulk'):
 #         error = HulkIOError(HulkIOError.INVALID_EXTENSION % input_path)
@@ -276,21 +270,6 @@ def print_error(message):
 #         error = HulkIOError(HulkIOError.ERROR_READING_FILE % input_path)
 #         print_error(error)
 #         return
-=======
-def run_pipeline(text):
-    # if not input_path.match('*.hulk'):
-    #     error = HulkIOError(HulkIOError.INVALID_EXTENSION % input_path)
-    #     print_error(error)
-    #     return
-
-    # try:
-    #     with open(input_path) as f:
-    #         text = f.read()
-    # except FileNotFoundError:
-    #     error = HulkIOError(HulkIOError.ERROR_READING_FILE % input_path)
-    #     print_error(error)
-    #     return
->>>>>>> 3011d74be2937ecc5f6d5857dea47333108d2a88
 
 def run_pipeline(text):
     print('=================== TEXT ======================')
@@ -346,19 +325,9 @@ def run_pipeline(text):
     print(context)
     return ast, errors, context, scope
     
-<<<<<<< HEAD
-run_pipeline(text)
-# if __name__ == "__main__":
-#     inp = sys.argv[1]
-#     input_path = Path(inp)
-#     input_file_name = input_path.stem
-#     output_file = Path(f'{input_file_name}.c')
-#     run_pipeline(input_path, output_file)
-=======
 if __name__ == "__main__":
     # inp = sys.argv[1]
     # input_path = Path(inp)
     # input_file_name = input_path.stem
     # output_file = Path(f'{input_file_name}.c')
     run_pipeline(text)
->>>>>>> 3011d74be2937ecc5f6d5857dea47333108d2a88

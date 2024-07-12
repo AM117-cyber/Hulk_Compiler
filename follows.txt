@@ -10330,3 +10330,332 @@ Vector_imp : {'.', 'in', '[', ']', '||', 'elif', 'else', '|', '&', 'as', '==', '
 Vector_item_list : {']'}-False
 Index_object : {'.', 'in', '[', ']', '||', 'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ','}-False
 S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+E : {'$', '|', ')'}-False
+T : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+F : {'|', '(', ')', 'symbol', '$', 'ε'}-False
+A : {'|', '*', '(', ')', 'symbol', '$', 'ε'}-False
+S' : {'$'}-False
+Program : {'$'}-False
+Type_function_list : {'{', 'while', '(', 'for', 'bool', '!', 'id', 'num', 'let', 'new', '[', 'string', '+', '-', 'if'}-False
+Expr_block : {'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', 'while', '<=', 'for', '!', 'type', '@', 'new', '@@', 'protocol', '+', '-', '*', '/', '^', '**', '%', '{', '}', ';', '(', ')', 'bool', ',', 'id', 'num', '.', 'let', 'in', 'function', '[', 'string', ']', '||', 'if'}-False
+Expr_list : {'}'}-False
+Expr_item_list : {'while', 'for', '!', 'new', '+', '-', '{', '}', '(', 'bool', 'id', 'num', 'let', '[', 'string', '$', 'if'}-False
+Expr : {'elif', ',', 'else', 'in', ']', ';', '||', ')'}-False
+Or_expr : {'elif', ',', 'else', '|', 'in', ']', ';', '||', ')'}-False
+And_expr : {'elif', 'else', '|', '&', ';', ')', ',', 'in', ']', '||'}-False
+Aritm_comp : {'elif', 'else', '|', '&', '==', 'is', '!=', '>', '>=', ';', '<', '<=', ')', ',', 'in', ']', '||'}-False
+Concat : {'elif', 'else', '|', '&', '==', 'is', '!=', '>', '>=', ';', '<', '<=', ')', ',', '@', 'in', '@@', ']', '||'}-False
+Arithmetic : {'elif', 'else', '|', '&', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', ';', ')', ',', 'in', ']', '||'}-False
+Term : {'elif', 'else', '|', '&', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '%', ';', ')', ',', 'in', ']', '||'}-False
+Pow : {'elif', 'else', '|', '&', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '%', ';', ')', ',', 'in', ']', '||'}-False
+Factor : {'elif', 'else', '|', '&', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', 'in', ']', '||'}-False
+Conditional : {'elif', ',', 'else', 'in', ']', ';', '||', ')'}-False
+Cond_other_case : {'elif', ',', 'else', 'in', ']', ';', '||', ')'}-False
+Let_expr : {'elif', ',', 'else', 'in', ']', ';', '||', ')'}-False
+Assignment : {'in'}-False
+Destr_assig : {'elif', ',', 'else', 'in', ']', ';', '||', ')'}-False
+Atom : {'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', '.', 'in', '[', ']', '||'}-False
+Call_func : {'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', '.', 'in', '[', ']', '||'}-False
+Member : {'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', '.', 'in', '[', ']', '||'}-False
+Variable : set()-False
+Params : {')'}-False
+Method_signature : {';', '{', '=>'}-False
+Inline_form : {'{', '}', 'while', '(', 'for', 'bool', '!', 'id', 'type', 'num', 'let', 'new', 'function', 'protocol', '[', 'string', '+', '-', 'if'}-False
+Full_form : {'{', '}', 'while', '(', 'for', 'bool', '!', 'id', 'type', 'num', 'let', 'new', 'function', 'protocol', '[', 'string', '+', '-', 'if'}-False
+Func : {'{', 'while', '(', 'for', 'bool', '!', 'id', 'type', 'num', 'let', 'new', 'function', 'protocol', '[', 'string', '+', '-', 'if'}-False
+Arguments : {')'}-False
+While_loop : {'elif', ',', 'else', 'in', ']', ';', '||', ')'}-False
+For_loop : {'elif', ',', 'else', 'in', ']', ';', '||', ')'}-False
+Cast_type : {'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', '.', 'in', '[', ']', '||'}-False
+Check_type : {'elif', 'else', '|', '&', 'is', ';', ')', ',', 'in', ']', '||'}-False
+Sign : {'elif', 'else', '|', '&', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', 'in', ']', '||'}-False
+Type_block : {'{', 'while', '(', 'for', 'bool', '!', 'id', 'type', 'num', 'let', 'new', 'function', 'protocol', '[', 'string', '+', '-', 'if'}-False
+Type_member_list : {'}'}-False
+Type_member_item : {'id', '}'}-False
+Type : {'{', 'while', '(', 'for', 'bool', '!', 'id', 'type', 'num', 'let', 'new', 'function', 'protocol', '[', 'string', '+', '-', 'if'}-False
+Type_dec : {'{', 'inherits'}-False
+Type_inst : {'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', '.', 'in', '[', ']', '||'}-False
+Protocol_block : {'{', 'while', '(', 'for', 'bool', '!', 'id', 'type', 'num', 'let', 'new', 'function', 'protocol', '[', 'string', '+', '-', 'if'}-False
+Method_dec_list : {'}'}-False
+Protocol : {'{', 'while', '(', 'for', 'bool', '!', 'id', 'type', 'num', 'let', 'new', 'function', 'protocol', '[', 'string', '+', '-', 'if'}-False
+Vector : {'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', '.', 'in', '[', ']', '||'}-False
+Vector_exp : {'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', '.', 'in', '[', ']', '||'}-False
+Vector_imp : {'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', '.', 'in', '[', ']', '||'}-False
+Vector_item_list : {']'}-False
+Index_object : {'elif', 'else', '|', '&', 'as', '==', 'is', '!=', '>', '>=', '<', '<=', '@', '@@', '+', '-', '*', '/', '^', '**', '%', ';', ')', ',', '.', 'in', '[', ']', '||'}-False
+S' : {'$'}-False
