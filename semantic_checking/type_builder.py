@@ -39,6 +39,8 @@ class TypeBuilder:
 
     @visitor.when(TypeDeclarationNode)
     def visit(self, node: TypeDeclarationNode): 
+        if node.name in self.context.hulk_types:
+            return
         current_type = self.context.get_type(node.name)
         if ErrorType() == current_type:
             return
@@ -63,6 +65,12 @@ class TypeBuilder:
             param_types.append(param_type)
         self.current_type.set_params(param_names,param_types)
 
+        for method in node.methods:
+            try:
+                self.visit(method) 
+            except SemanticError as error:
+                self.errors.append(error)
+        
         if node.parent in ['String','Boolean','Number']:
             self.errors.append(INVALID_INHERITANCE_FROM_DEFAULT_TYPE%(self.current_type.name,node.parent))
             parent = ErrorType()
@@ -78,11 +86,6 @@ class TypeBuilder:
                     self.errors.append(INVALID_CIRCULAR_INHERITANCE%(self.current_type.name,node.parent))
         self.current_type.set_parent(parent)
 
-        for method in node.methods:
-            try:
-                self.visit(method) 
-            except SemanticError as error:
-                self.errors.append(error)
         for attribute in node.attributes:
             try:
                 self.visit(attribute) 
@@ -92,29 +95,32 @@ class TypeBuilder:
 
     @visitor.when(ProtocolDeclarationNode)
     def visit(self, node: ProtocolDeclarationNode): 
+        if node.name in self.context.hulk_protocols:
+            return
         current_type = self.context.get_protocol(node.name)
         if ErrorType() == current_type:
             return
         self.current_type = current_type
       
-        if node.parent is None:
-            parent = AutoType()
-        else:
-            try:
-                parent = self.context.get_protocol(node.parent)
-            except SemanticError as error:
-                self.errors.append(NOT_DEFINED_PARENT_TYPE%(node.parent,self.current_type))
-                parent = TypeError()
-            else:
-                if parent.conforms_to(self.current_type):
-                    parent = TypeError()
-                    self.errors.append(INVALID_CIRCULAR_INHERITANCE%(self.current_type.name,node.parent))
-        self.current_type.set_parent(parent) 
         for method_sign in node.methods:
             try:
                 self.visit(method_sign) 
             except SemanticError as error:
                 self.errors.append(error)
+
+        if node.parent is None:
+            parent = ObjectType()
+        else:
+            try:
+                parent = self.context.get_protocol(node.parent)
+            except SemanticError as error:
+                self.errors.append(NOT_DEFINED_PARENT_TYPE%(node.parent,self.current_type))
+                parent = ErrorType()
+            else:
+                if parent.conforms_to(self.current_type):
+                    parent = ErrorType()
+                    self.errors.append(INVALID_CIRCULAR_INHERITANCE%(self.current_type.name,node.parent))
+        self.current_type.set_parent(parent) 
 
 
     @visitor.when(FunctionDeclarationNode)
@@ -147,7 +153,8 @@ class TypeBuilder:
             self.context.create_function(node.name,param_names,param_types,return_type)
         except SemanticError as error: 
             self.errors.append(error)
-            self.context.set_function_error(node.name)
+            if(node.name not in self.context.hulk_functions):
+                self.context.set_function_error(node.name)
 
 
     @visitor.when(TypeAttributeNode)
@@ -155,7 +162,7 @@ class TypeBuilder:
         try:
             type = self.context.get_type_or_protocol(node.type) if node.type is not None else AutoType()
         except:
-            self.errors.append(NOT_DEFINED_ATTRIBUTE_TYPE%(node.type,node.name,self.current_type))
+            self.errors.append(NOT_DEFINED_ATTRIBUTE_TYPE%(node.type,node.name,self.current_type.name))
             type = ErrorType()
         try:
             self.current_type.define_attribute(node.name,type)
@@ -176,12 +183,12 @@ class TypeBuilder:
         param_names = []
         names_count = {}
         for param in node.params:
-            if(param[0]) in names_count:
+            if param[0] in names_count:
                 self.errors.append(SemanticError(f'Method {node.name} in type {self.current_type.name} has more than one parameter named {param[0]}'))
                 self.current_type.set_method_error(node.name)
                 return
             else: 
-                names_count[param] = 1
+                names_count[param[0]] = 1
             try:
                 param_type = self.context.get_type_or_protocol(param[1]) if param[1] is not None else AutoType()
             except SemanticError as error:

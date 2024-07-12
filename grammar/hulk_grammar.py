@@ -139,7 +139,7 @@ For_loop %= for_ + o_par + id_ + in_ + Expr + c_par + Expr, lambda h ,s: ForNode
 
 #--------------------------------------------------------Destructive-Assignment-------------------------------------------------------------------
 
-Destr_assig %= id_ + destr_op + Expr, lambda h, s: DestrNode(s[1], s[3])
+Destr_assig %= id_ + destr_op + Expr, lambda h, s: DestrNode(VarNode(s[1]), s[3]) # marca mandarina
 Destr_assig %= Atom + dot + id_ + destr_op + Expr, lambda h,s: DestrNode(CallTypeAttributeNode(s[1], s[3]), s[5])
 Destr_assig %= Or_expr, lambda h, s: s[1]
 
@@ -151,7 +151,7 @@ Or_expr %= And_expr, lambda h, s: s[1]
 And_expr %= And_expr + and_op + Check_type, lambda h,s : AndNode(s[1],s[3])
 And_expr %= Check_type, lambda h, s: s[1]
 
-Check_type %= Check_type + is_ + Aritm_comp, lambda h,s : CheckTypeNode(s[1],s[3])
+Check_type %= Check_type + is_ + id_, lambda h,s : CheckTypeNode(s[1],s[3])
 Check_type %= Aritm_comp, lambda h, s: s[1]
 
 Aritm_comp %= Aritm_comp + equal + Concat, lambda h,s : EqualNode(s[1],s[3])

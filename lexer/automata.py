@@ -1,4 +1,4 @@
-import pydot
+# import pydot
 from cmp.utils import ContainerSet
 
 class NFA:

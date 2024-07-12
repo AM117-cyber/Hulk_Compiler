@@ -1,5 +1,6 @@
 import itertools as itt
 from collections import OrderedDict
+from typing import Union
 
 
 class SemanticError(Exception):
@@ -20,10 +21,13 @@ class Attribute:
     
     def is_error(self):
         AttributeError() == self
+
+    def set_type(self,typex):
+        self.type = typex
     
 class AttributeError(Attribute):
     def __init__(self):
-        super().__init__('<error>','<error>')
+        super().__init__('<error>',ErrorType())
     
     def __eq__(self,other):
         return isinstance(other, AttributeError) or other.name == self.name
@@ -34,10 +38,25 @@ class Method:
         self.param_names = param_names
         self.param_types = params_types
         self.return_type = return_type
+        self.inferred_return_type = return_type
+        # self.inferred_param_types = params_types
+
+    #changed
+    def set_inferred_return_type(self,typex):
+        self.inferred_return_type = typex
+    
+    # def set_inferred_param_type(self,param_name, param_type):
+    #     self.inferred_param_types[param_name] = param_type
+
+    def implements_method(self,other):
+        if self.return_type.conforms_to(other.return_type) and all(param_other.conforms_to(param_self) for param_self, \
+                                                                   param_other in zip(self.param_types, other.param_types)):
+            return True
+        return False
 
     def __str__(self):
         params = ', '.join(f'{n}:{t.name}' for n,t in zip(self.param_names, self.param_types))
-        return f'[method] {self.name}({params}): {self.return_type.name};'
+        return f'[method] {self.name}({params}): {self.return_type.name} : {self.inferred_return_type.name};'
 
     def __eq__(self, other):
         return other.name == self.name and \
@@ -65,6 +84,12 @@ class Protocol:
             raise SemanticError(f'Parent is already set for {self.name}.')
         self.parent = parent
 
+    def is_auto(self):
+        return False
+    
+    def is_error(self):
+        return False
+        
     def get_method(self, name: str):
         if name in self.methods:
             return self.methods[name]
@@ -76,18 +101,34 @@ class Protocol:
             raise SemanticError(f'Method "{name}" is not defined in {self.name}.')
  
     def define_method(self, name: str, param_names: list, param_types: list, return_type):
-        if name in self.methods:
-            raise SemanticError(f'Method "{name}" already defined in {self.name}')
+
+        try:
+            self.get_method(name)
+        except SemanticError:
+            pass
+        else: 
+            raise SemanticError(f'Method "{name}" already defined in {self.name}. Protocols can not override methods')
+
         method = Method(name, param_names, param_types, return_type)
         self.methods[name] = method
         return method
     
     def set_method_error(self,key):
         self.methods[key] = MethodError()
+
+    def __eq__(self, other):
+        return self.name == other.name 
     
     def conforms_to(self, other):
         return other.bypass() or self == other or self.parent is not None and self.parent.conforms_to(other)
-
+        # if other.bypass():
+        #     return True
+        # elif self == other:
+        #     return True
+        # elif self.parent is not None and self.parent.conforms_to(other):
+        #     return True
+        # else:
+        #     return False
     def bypass(self):
         return False
 
@@ -104,6 +145,9 @@ class Protocol:
 
     def __repr__(self):
         return str(self)
+    
+
+
 
 class Type:
     def __init__(self, name:str):
@@ -113,6 +157,10 @@ class Type:
         self.parent = None
         self.param_names = []
         self.param_types = []
+
+    #changed
+    def __eq__(self, other):
+        return self.name == other.name
 
     def is_error(self):
         return ErrorType() == self
@@ -124,6 +172,17 @@ class Type:
         self.param_names = param_names
         self.param_types = param_types
 
+    #changed
+    def find_params(self):
+        if ObjectType() == self:
+            return [],[]
+        elif len(self.param_types) > 0:
+                return self.param_names,self.param_types
+        return self.parent.find_params()
+    
+      
+            
+ 
     def set_parent(self, parent):
         if self.parent is not None:
             raise SemanticError(f'Parent type is already set for {self.name}.')
@@ -141,11 +200,12 @@ class Type:
                 raise SemanticError(f'Attribute "{name}" is not defined in {self.name}.')
 
     def define_attribute(self, name: str, typex):
-            if name in self.attributes:
-                raise SemanticError(f'Attribute "{name}" is already defined in {self.name}.')
-            attribute = Attribute(name, typex)
-            self.attributes[name] = attribute
-            return attribute
+        #Ver si es un error
+        if name in self.attributes:
+            raise SemanticError(f'Attribute "{name}" is already defined in {self.name}.')
+        attribute = Attribute(name, typex)
+        self.attributes[name] = attribute
+        return attribute
 
     def get_method(self, name: str):
         if name in self.methods:
@@ -186,8 +246,15 @@ class Type:
         return plain.values() if clean else plain
 
     def conforms_to(self, other):
-        return other.bypass() or self == other or self.parent is not None and self.parent.conforms_to(other)
-
+        if other.is_auto():
+            return True
+        if isinstance(other,Type):
+            return other.bypass() or self == other or self.parent is not None and self.parent.conforms_to(other)
+        else:
+            try:
+               return all(self.get_method(other_method.name).implements_method(other_method) for other_method in other.methods.values())
+            except SemanticError:
+               return False
     def bypass(self):
         return False
 
@@ -229,26 +296,36 @@ class AutoType(Type):
     def bypass(self):
         return True
 
+    def conforms_to(self, other):
+        return True
+    
     def __eq__(self, other):
         return isinstance(other, AutoType) or other.name == self.name
+
 
 
 class StringType(Type):
     def __init__(self):
         super().__init__('String')
         self.set_parent(ObjectType())
-    
+
+    def bypass(self):
+        return True
+
     def __eq__(self, other):
         return isinstance(other, StringType) or other.name == self.name
+    
+    # def _init_(self, other):
+    #     if other.
 
 
 class BooleanType(Type):
     def __init__(self):
         super().__init__('Boolean')
         self.set_parent(ObjectType())
-
     def __eq__(self, other):
         return isinstance(other, BooleanType) or other.name == self.name
+
 
 class NumberType(Type):
     def __init__(self) -> None:
@@ -256,16 +333,14 @@ class NumberType(Type):
         self.set_parent(ObjectType())
 
     def __eq__(self, other):
-        return isinstance(other, BooleanType) or other.name == self.name
-
-
+        return isinstance(other, NumberType) or other.name == self.name
 
 class ObjectType(Type):
     def __init__(self) -> None:
         super().__init__('Object')
 
-    def conforms_to(self, other):
-        return False
+    def __eq__(self, other):
+        return isinstance(other, ObjectType) or other.name == self.name
 
 
 class SelfType(Type):
@@ -282,13 +357,47 @@ class SelfType(Type):
     def __eq__(self, other):
         return isinstance(other, SelfType) or other.name == self.name
 
+class VectorType(Type):
+    def __init__(self, element_type) -> None:
+        super().__init__(f'{element_type.name}[]')
+        self.set_parent(ObjectType())
+        self.define_method('size', [], [], NumberType())
+        self.define_method('next', [], [], BooleanType())
+        self.define_method('current', [], [], element_type)
+
+    def get_element_type(self) -> Union[Type, Protocol]:
+        return self.get_method('current').return_type
+
+    def conforms_to(self, other):
+        if not isinstance(other, VectorType):
+            return super().conforms_to(other)
+        self_elem_type = self.get_element_type()
+        other_elem_type = other.get_element_type()
+        return self_elem_type.conforms_to(other_elem_type)
+
+    def __eq__(self, other):
+        return isinstance(other, VectorType) or other.name == self.name
+
+def get_vector_type(items_type):
+    iterable_type = None
+    count_auto = 0
+    for item in items_type:
+        if item.is_auto():
+            count_auto += 1
+        elif iterable_type is None and item is not None and not item.is_error():
+            iterable_type = item
+        elif iterable_type is not None and item != iterable_type and not item.is_error():
+            raise 'Error'
+    if count_auto == len(items_type):
+        iterable_type = AutoType()
+    return iterable_type
 
     # def conforms_to(self, other):
     #     return True
 
     # def bypass(self):
     #     return True
-
+# SemanticError(VECTOR_OBJECT_DIFFERENT_TYPES%(iterable_type.name, item.name)))
 
 # class IntType(Type):
 #     def __init__(self):
@@ -302,12 +411,15 @@ class Context:
         self.types = {'String':StringType(), 'Boolean':BooleanType(),'Number':NumberType(), 'Object': ObjectType()}
         self.protocols = {}
         self.functions = {}
+        self.hulk_types = {'String','Boolean','Number','Object', 'Range'}
+        self.hulk_protocols = {'Iterable'}
+        self.hulk_functions = {'sqrt','sin','cos','exp','log','rand','print','range'}
 
     def create_type(self, name:str):
         if name in self.types:
-            raise SemanticError(f'Type with the same name ({name}) already in context.')
+            raise SemanticError(f'Type with the same name "{name}" already in context.')
         if name in self.protocols:
-            raise SemanticError(f'Protocol with the same name ({name}) already in context.')
+            raise SemanticError(f'Protocol with the same name "{name}" already in context.')
         typex = self.types[name] = Type(name)
         return typex
 
@@ -316,6 +428,7 @@ class Context:
             return self.types[name]
         except KeyError:
             raise SemanticError(f'Type "{name}" is not defined.')
+        
     
     def set_type_error(self,key):
         self.types[key] = ErrorType()
@@ -323,9 +436,9 @@ class Context:
 
     def create_protocol(self, name:str):
         if name in self.protocols:
-            raise SemanticError(f'Protocol with the same name ({name}) already in context.')
+            raise SemanticError(f'Protocol with the same name "{name}" already in context.')
         if name in self.types:
-            raise SemanticError(f'Type with the same name ({name}) already in context.')
+            raise SemanticError(f'Type with the same name "{name}" already in context.')
         protocolx = self.protocols[name] = Protocol(name)
         return protocolx  
     
@@ -341,16 +454,16 @@ class Context:
     def get_type_or_protocol(self, name:str):
         try:
             return self.get_type(name)
-        except KeyError:
+        except SemanticError:
             try:
                 return self.get_protocol(name)
-            except KeyError:
+            except SemanticError:
                 raise SemanticError(f'Type or Protocol "{name}" is not defined')
 
 
     def create_function(self, name:str, param_names, param_types,return_type):
         if name in self.functions:
-            raise SemanticError(f'Function with the same name ({name}) already in context.')
+            raise SemanticError(f'Function with the same name "{name}" already in context.')
         functionx = self.functions[name] = Method(name, param_names, param_types, return_type)
         return functionx 
     
@@ -363,30 +476,6 @@ class Context:
     def set_function_error(self,key):
         self.functions[key] = MethodError()
 
-    # def reset_types(self):
-    #     flag = False
-    #     for type in self.types:
-    #         if flag:
-    #             self.types[type][1] = False
-    #         if type == 'Object':
-    #             flag = True
-
-    # def reset_protocols(self):
-    #     self.reset(self.protocols,'Iterable')
-
-    # def reset_functions(self):
-    #     self.reset(self.functions,'')
-
-    # def reset (self, dict, s_key):
-    #     flag = False
-    #     for item in self.items:
-    #         if flag:
-    #             dict[item][1] = False
-    #         if item == s_key:
-    #             flag = True    
-
-    # def __str__(self):
-    #     return '{\n\t' + '\n\t'.join(y for x in self.types.values() for y in str(x).split('\n')) + '\n}'
     
     def __str__(self):
         return ('{\n\t' +
@@ -400,20 +489,15 @@ class Context:
     def __repr__(self):
         return str(self)
 
-# changed
 class VariableInfo:
     def __init__(self, name, vtype, is_error = False, is_parameter = False):
         self.name = name
         self.type = vtype
         self.is_parameter = is_parameter
         self.is_error = is_error
-        self.value = None
     
     def set_type(self, vtype):
         self.type = vtype
-    
-    def set_value(self, value):
-        self.value = value
 
 class Scope:
     def __init__(self, parent=None):
@@ -447,3 +531,36 @@ class Scope:
 
     def is_local(self, vname):
         return any(True for x in self.locals if x.name == vname)
+
+#changed
+def get_lowest_common_ancestor(types):
+   
+    if not types or any(isinstance(t, ErrorType) for t in types):
+        return ErrorType()
+    if any(t == AutoType() for t in types):
+        return AutoType()
+    lca = types[0]
+    for typex in types[1:]:
+        lca = _get_lca(lca, typex)
+    return lca
+
+
+def _get_lca(type1: Type, type2: Type):
+    # Object is the "root" of protocols too
+    if type1 is None or type2 is None:
+        return ObjectType()
+    if type1.conforms_to(type2):
+        return type2
+    if type2.conforms_to(type1):
+        return type1
+    return _get_lca(type1.parent, type2.parent)
+
+def _get_lca(first_type: Type, second_type: Type):
+    # Object is the "root" of protocols too
+    if first_type is None or second_type is None:
+        return ObjectType()
+    if first_type.conforms_to(second_type):
+        return second_type
+    if second_type.conforms_to(first_type):
+        return first_type
+    return _get_lca(first_type.parent, second_type.parent)

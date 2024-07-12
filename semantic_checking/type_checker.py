@@ -4,7 +4,6 @@ from grammar.hulk_grammar import G
 from grammar.ast_nodes import *
 from cmp.semantic import *
 
-INCOMPATIBLE_TYPES = 'Cannot convert "%s" into "%s".'
 WRONG_METHOD_RETURN_TYPE = 'Method "%s" in type "%s" has declared return type "%s" but returns "%s"'
 WRONG_FUNCTION_RETURN_TYPE = 'Function "%s" return type is "%s" but it returns "%s"'
 VARIABLE_IS_DEFINED = 'Variable "%s" is already defined in this scope'
@@ -21,7 +20,7 @@ VECTOR_OBJECT_DIFFERENT_TYPES = 'Vector is conformed by different types'
 INVALID_INDEXING = 'Can not index into a "%s"'
 INVALID_INDEXING_OPERATION = 'An index can not be a "%s"'
 NOT_DEFINED = 'Variable "%s" is not defined'
-INVALID_TYPE_ARGUMENTS = 'Type of param "%s" is "%s" in "%s" but it is being called with type"%s" '
+INVALID_TYPE_ARGUMENTS = 'Type of param "%s" is "%s" in "%s" but it is being called with type "%s" '
 INVALID_LEN_ARGUMENTS = '"%s" has %s parameters but it is being called with "%s" arguments'
 PRIVATE_ATTRIBUTE = 'Cannot access attribute "%s" in type "%s" is private. All attributes are private'
 NOT_CONFORMS_TO = '"%s" does not conform to "%s"'
@@ -56,6 +55,8 @@ class TypeChecker:
     
     @visitor.when(TypeDeclarationNode)
     def visit(self, node: TypeDeclarationNode, scope: Scope):
+        if(node.name in self.context.hulk_types):
+            return
         self.current_type = self.context.get_type(node.name)
         if self.current_type.is_error():
             return
@@ -99,7 +100,7 @@ class TypeChecker:
             except SemanticError as error:
                 self.errors.append(error)
         
-
+    #Verificar que el atributo no lo tenga el padre
     @visitor.when(TypeAttributeNode)
     def visit(self, node: TypeAttributeNode, scope: Scope):
         self.current_method = None
@@ -143,11 +144,13 @@ class TypeChecker:
             self.errors.append(WRONG_METHOD_RETURN_TYPE%(self.current_method.name,self.current_type.name,self.current_method.return_type.name,expr_type.name))
             # return_type = ErrorType()
         else:
-            self.current_method.set_return_type(return_type)
+            self.current_method.set_inferred_return_type(return_type)
 
     @visitor.when(FunctionDeclarationNode)
     def visit(self, node: FunctionDeclarationNode, scope: Scope):
         self.current_type = None
+        if(node.name in self.context.hulk_functions):
+            return
         self.current_method = self.context.get_function(node.name)
         if self.current_method.is_error():
             return
@@ -164,7 +167,7 @@ class TypeChecker:
             self.errors.append(WRONG_FUNCTION_RETURN_TYPE%(self.current_method.name,self.current_method.return_type.name,expr_type.name))
             # return_type = ErrorType()
         else:
-            self.current_method.set_return_type(return_type)
+            self.current_method.set_inferred_return_type(return_type)
 
 
     @visitor.when(VarDeclarationNode)
@@ -187,7 +190,7 @@ class TypeChecker:
                     var_type = self.assign_type(var_type,expr_type)
                 except:
                     self.errors.append(INCOMPATIBLE_TYPES%(expr_type.name,var_type.name))
-                    # var_type = ErrorType()
+                    scope.define_variable(node.name,var_type)
                 else:
                     scope.define_variable(node.name, var_type)
 
@@ -199,6 +202,8 @@ class TypeChecker:
             return expr_type
         elif not var_type.is_error() and not expr_type.is_error() and not expr_type.conforms_to(var_type):
             raise SemanticError('Error')
+        else:
+            return var_type
             
 #_____________________________________________________________________________________________________________________________________
 #__________________________________________Expressions______________________________________________________________________________________
@@ -209,56 +214,59 @@ class TypeChecker:
 
         for index,condition in enumerate(node.conditions):
             condition_type = self.visit(condition, scope)
-            if not condition_type.is_error() and not condition_type.is_auto() and BooleanType != condition_type:
+            if not condition_type.is_error() and not condition_type.is_auto() and BooleanType() != condition_type:
                 self.errors.append(SemanticError(INCOMPATIBLE_TYPES%(condition_type.name,'Boolean')))
             if condition == 'true':
-                return self.visit(expressions[index])
+                return self.visit(expressions[index], scope)
             
         types = [self.visit(expr,scope) for expr in expressions]
         return get_lowest_common_ancestor(types)
     
     @visitor.when(LetInNode)
     def visit(self, node: LetInNode, scope: Scope):
-        child = scope.create_child()
         for var_declaration in node.variables:
-            self.visit(var_declaration,child)
-        return self.visit(node.body,child)
+            scope = scope.create_child()
+            self.visit(var_declaration,scope)
+        return self.visit(node.body,scope)
 
     
     @visitor.when(WhileNode)
     def visit(self, node: WhileNode, scope: Scope):
         condition_type = self.visit(node.condition, scope)
-        if BooleanType() != condition_type or not condition_type.is_auto():
-            if not condition_type.is_error(): 
-                self.errors.append(SemanticError(INCOMPATIBLE_TYPES%(condition_type.name, 'Boolean')))
+        if BooleanType() != condition_type and not condition_type.is_auto() and not condition_type.is_error():
+                self.errors.append(SemanticError(INCOMPATIBLE_TYPES%(condition_type.name, 'BooleanWhilee')))
             # return ErrorType()
             #No sé si retornar un error si el tipo de la condición no es booleano
         return self.visit(node.body,scope)
 
+
+    
+
+
     @visitor.when(ForNode)
     def visit(self, node: ForNode, scope: Scope):
         child_scope = scope.create_child()
-        items_type = [self.visit(item, child_scope) for item in node.iterable]
-        try:
-            iterable_type = get_vector_type(items_type)
-        except:
-            self.errors.append(SemanticError(VECTOR_OBJECT_DIFFERENT_TYPES))
-            child_scope.define_variable(node.item, ErrorType())
-            # return ErrorType()
+        iterable = self.visit(node.iterable,child_scope)
+        
+        if iterable.conforms_to(self.context.get_protocol('Iterable')): # marca mandarina (por que no conforma a iterable?) TE AMO TITI
+            child_scope.define_variable(node.item, iterable.get_method('current').inferred_return_type)
+        elif not iterable.is_auto() and not iterable.is_error():
+            self.errors.append(NOT_CONFORMS_TO%(iterable.name,'Iterable'))
         else:
-            child_scope.define_variable(node.item, iterable_type)
+            child_scope.define_variable(node.item,iterable) # marca mandarina (definir node.item cuando entra en el elif)
+
         body_type = self.visit(node.body, child_scope)
         return body_type
 
     @visitor.when(DestrNode)
     def visit(self, node: DestrNode, scope: Scope):
         
-        var_type = self.visit(node.var, scope)
+        var_type = self.visit(node.var, scope) # marca mandarina (node.var es un string y no un nodo, problema en la gramatica, creo)
         if var_type.is_error():
             return var_type
         
         expr_type = self.visit(node.expr, scope)
-        if var_type == self.current_type:
+        if self.current_type is not None and self.current_method is not None and var_type == self.current_type: # marca mandarina
             self.errors.append(SemanticError(SELF_IS_READONLY))
             return ErrorType()
         if expr_type.is_error():
@@ -272,8 +280,8 @@ class TypeChecker:
 
     @visitor.when(EqualityBinaryNode)
     def visit(self, node:EqualityBinaryNode, scope: Scope):
-        left_type = self.visit(node.left)
-        right_type = self.visit(node.right)
+        left_type = self.visit(node.left, scope)
+        right_type = self.visit(node.right, scope)
 
         if left_type.is_error() or right_type.is_error():
             return BooleanType()
@@ -291,8 +299,8 @@ class TypeChecker:
     
     @visitor.when(ComparisonBinaryNode)
     def visit(self, node:ComparisonBinaryNode, scope: Scope):
-        left_type = self.visit(node.left)
-        right_type = self.visit(node.right)
+        left_type = self.visit(node.left, scope)
+        right_type = self.visit(node.right, scope)
 
         if left_type.is_error() or right_type.is_error():
             return BooleanType()
@@ -338,18 +346,18 @@ class TypeChecker:
     @visitor.when(CheckTypeNode)
     def visit(self, node:CheckTypeNode, scope: Scope):
         #no estoy segura de si esto puede pasar
-        if self.visit(node.left).is_error():
+        if self.visit(node.left, scope).is_error():
             return BooleanType()
         try:
             self.context.get_type_or_protocol(node.right) 
         except SemanticError as error:
-            self.errors.append(SemanticError(INVALID_IS_OPERATION(node.right))+" "+ error)
+            self.errors.append(SemanticError(INVALID_IS_OPERATION%(node.right)))
         return BooleanType()
     
     @visitor.when(StringBinaryNode)
     def visit(self, node:StringBinaryNode, scope:Scope):
-        left_type = self.visit(node.left)
-        right_type = self.visit(node.right)
+        left_type = self.visit(node.left, scope)
+        right_type = self.visit(node.right, scope)
         if left_type not in [StringType(),BooleanType(),NumberType(), AutoType(), ErrorType()] or right_type not in [StringType(),BooleanType(),NumberType(), AutoType(), ErrorType()]:
             self.errors.append(INVALID_OPERATION%(left_type.name,right_type.name))
         return StringType()
@@ -367,6 +375,8 @@ class TypeChecker:
 
     @visitor.when(CallFuncNode)
     def visit(self, node:CallFuncNode, scope: Scope):
+        if node.name == 'base' and len(node.arguments)==0 and self.current_type is not None and self.current_method is not None:
+            return self.current_method.inferred_return_type
         try:
             function = self.context.get_function(node.name)
         except SemanticError as error:
@@ -385,9 +395,11 @@ class TypeChecker:
                     # if param_type.is_error():
                     #     return ErrorType()
                 except SemanticError:
-                    self.errors.append(SemanticError(INVALID_TYPE_ARGUMENTS%(function.param_names[index], function.param_types[index].name,arg_type.name))) 
+                    self.errors.append(SemanticError(INVALID_TYPE_ARGUMENTS%(function.param_names[index], function.param_types[index].name,function.name,arg_type.name))) 
                     # return ErrorType() 
-        return function.return_type
+        if function.name == 'print':
+            return arg_type
+        return function.inferred_return_type
 
     @visitor.when(TypeInstantiationNode)
     def visit(self, node: TypeInstantiationNode, scope: Scope):
@@ -404,15 +416,16 @@ class TypeChecker:
         if len(node.arguments) != len(param_types):
             self.errors.append(INVALID_LEN_ARGUMENTS%(type.name,len(type.param_types),len(node.arguments)))
             # return ErrorType()
-        for index, (param_type, arg) in enumerate(zip(param_types, node.arguments)):
-            arg_type = self.visit(arg, scope)
-            try:
-                param_type = self.assign_type(param_type,arg_type)
-                # if param_type.is_error():
-                #     return ErrorType()
-            except SemanticError:
-                self.errors.append(SemanticError(INVALID_TYPE_ARGUMENTS%(index, param_type.name.name,arg_type.name))) 
-                # return ErrorType() 
+        else:
+            for index, (param_type, arg) in enumerate(zip(param_types, node.arguments)):
+                arg_type = self.visit(arg, scope)
+                try:
+                    param_type = self.assign_type(param_type,arg_type)
+                    # if param_type.is_error():
+                    #     return ErrorType()
+                except SemanticError:
+                    self.errors.append(SemanticError(INVALID_TYPE_ARGUMENTS%(type.param_names[index], param_type.name,type.name,arg_type.name))) 
+                    # return ErrorType() 
         return type
 
     @visitor.when(ExplicitVectorNode)
@@ -430,14 +443,14 @@ class TypeChecker:
     @visitor.when(ImplicitVectorNode)
     def visit(self, node: ImplicitVectorNode, scope: Scope):
         child_scope = scope.create_child()
-        items_type = [self.visit(item, child_scope) for item in node.iterable]
-        try:
-            iterable_type = get_vector_type(items_type)
-        except:
-            self.errors.append(SemanticError(VECTOR_OBJECT_DIFFERENT_TYPES))
-            return ErrorType()
+        iterable = self.visit(node.iterable,child_scope)
         
-        child_scope.define_variable(node.item, iterable_type)
+        if iterable.conforms_to(self.context.get_protocol('Iterable')):
+            child_scope.define_variable(node.item, iterable.get_method('current').inferred_return_type)
+        elif not iterable.is_auto() and not iterable.is_error():
+            self.errors.append(NOT_CONFORMS_TO%(iterable.name,'Iterable'))
+        else:
+            child_scope.define_variable(node.item,iterable)
         expr_type = self.visit(node.expr, child_scope)
         return VectorType(expr_type)
 
@@ -445,7 +458,7 @@ class TypeChecker:
     @visitor.when(IndexObjectNode)
     def visit(self, node: IndexObjectNode, scope: Scope):
         pos_type = self.visit(node.pos, scope)
-        if NumberType() != pos_type or not pos_type.is_auto() and not pos_type.is_error():
+        if NumberType() != pos_type and not pos_type.is_auto() and not pos_type.is_error():
             self.errors.append(INVALID_INDEXING_OPERATION%(pos_type))
             # return ErrorType()
         
@@ -453,14 +466,16 @@ class TypeChecker:
         if object_type.is_error():
             return ErrorType()
         elif not object_type.conforms_to(self.context.get_protocol('Iterable')):
-            self.errors.append(INVALID_INDEXING%(object_type))
+            self.errors.append(INVALID_INDEXING%(object_type.name))
             # return ErrorType()
         # else:
-        return self.object_type.get_method('current').return_type
+        return object_type.get_method('current').inferred_return_type
 
     @visitor.when(CallMethodNode)
     def visit(self, node:CallMethodNode, scope: Scope):
-        owner = self.visit(node.inst_name)
+        owner = self.visit(node.inst_name, scope)
+        if owner.is_error():
+            return ErrorType()
         try:
             method = owner.get_method(node.method_name)
         except SemanticError as error:
@@ -481,11 +496,11 @@ class TypeChecker:
                 except SemanticError:
                     self.errors.append(SemanticError(INVALID_TYPE_ARGUMENTS%(method.param_names[index], method.param_types[index].name,arg_type.name))) 
                     # return ErrorType()
-        return method.return_type
+        return method.inferred_return_type
 
     @visitor.when(CallTypeAttributeNode)
     def visit(self, node:CallTypeAttributeNode, scope: Scope):
-        owner = self.visit(node.inst_name)
+        owner = self.visit(node.inst_name, scope)
         if owner.is_error():
             return ErrorType()
         if owner != self.current_type:

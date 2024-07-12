@@ -28,14 +28,18 @@ class TypeCollector(object):
         try:
             new_type = self.context.create_type(node.name)
         except SemanticError as error:
-            self.context.set_type_error(node.name)
+            self.errors.append(SemanticError(error))
+            if(node.name not in self.context.hulk_types):
+                self.context.set_type_error(node.name)
     
     @visitor.when(ProtocolDeclarationNode)
     def visit(self, node :ProtocolDeclarationNode):
         try:
             new_protocol = self.context.create_protocol(node.name)
         except SemanticError as error:
-            self.context.set_protocol_error(node.name) 
+            self.errors.append(SemanticError(error))
+            if(node.name not in self.context.hulk_protocols):
+                self.context.set_protocol_error(node.name) 
 
     def create_hulk_functions(self):
         range_type:Type = self.context.create_type('Range')
@@ -52,7 +56,7 @@ class TypeCollector(object):
         self.context.create_function('exp',['value'],[NumberType()],NumberType())
         self.context.create_function('log',['base','value'],[NumberType(),NumberType()],NumberType())
         self.context.create_function('rand',[],[],NumberType())
-        self.context.create_function('print',['obj'],[ObjectType()],ObjectType())
+        print_function = self.context.create_function('print',['obj'],[ObjectType()],ObjectType())
         self.context.create_function('range',['begin','end'],[NumberType(),NumberType()],range_type)
 
     def create_iterable_protocol(self):
