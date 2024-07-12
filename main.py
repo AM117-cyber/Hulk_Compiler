@@ -10,7 +10,7 @@ from lexer.hulk_lexer import HulkLexer
 from parser.evaluation import evaluate_reverse_parse
 from parser.hulk_parser import HulkParser
 from cmp.ast import get_printer
-from tests import customTest, testY, testX, test1, testZ, tests, test1
+# from tests import customTest, testY, testX, test1, testZ, tests, test1
 from semantic_checking.type_builder import TypeBuilder
 from semantic_checking.type_collector import TypeCollector
 
@@ -35,24 +35,25 @@ def print_error(message):
     refresh = "\033[0m"
     print(f"{red}{message}{refresh}")
 
-def run_pipeline(input_path: Path, output_path: Path):
-    if not input_path.match('*.hulk'):
-        error = HulkIOError(HulkIOError.INVALID_EXTENSION % input_path)
-        print_error(error)
-        return
+# def run_pipeline(input_path: Path, output_path: Path):
+#     if not input_path.match('*.hulk'):
+#         error = HulkIOError(HulkIOError.INVALID_EXTENSION % input_path)
+#         print_error(error)
+#         return
 
-    try:
-        with open(input_path) as f:
-            text = f.read()
-    except FileNotFoundError:
-        error = HulkIOError(HulkIOError.ERROR_READING_FILE % input_path)
-        print_error(error)
-        return
+#     try:
+#         with open(input_path) as f:
+#             text = f.read()
+#     except FileNotFoundError:
+#         error = HulkIOError(HulkIOError.ERROR_READING_FILE % input_path)
+#         print_error(error)
+#         return
 
+def run_pipeline(text):
     print('=================== TEXT ======================')
     print(text)
     print('================== TOKENS =====================')
-    lexer = HulkLexer()
+    lexer = HulkLexer(use_cached=False)
     tokens, lexicographic_errors = lexer(text)
 
     if lexicographic_errors:
@@ -62,12 +63,11 @@ def run_pipeline(input_path: Path, output_path: Path):
     
     print(tokens)
     print('=================== PARSE =====================')
-    parser = HulkParser()
-    derivations, operations, build_table_errors = parser([t.token_type for t in tokens])
-    if build_table_errors:
-        print_error("Grammar is not SLR(1)")
-        for err in build_table_errors:
-            print_error(f"There is a conflict at state {err.key}: current value is {err.prev_value} and tried to insert the new value {err.new_value}")
+    parser = HulkParser(use_cached=False)
+    derivations, operations, parsing_errors = parser(tokens)
+    if parsing_errors:
+        for err in parsing_errors:
+            print_error(err)
         return
     print('\n'.join(repr(x) for x in derivations))
     print('==================== AST ======================')
@@ -94,9 +94,10 @@ def run_pipeline(input_path: Path, output_path: Path):
     print(context)
     return ast, errors, context
     
-if __name__ == "__main__":
-    inp = sys.argv[1]
-    input_path = Path(inp)
-    input_file_name = input_path.stem
-    output_file = Path(f'{input_file_name}.c')
-    run_pipeline(input_path, output_file)
+run_pipeline(text)
+# if __name__ == "__main__":
+#     inp = sys.argv[1]
+#     input_path = Path(inp)
+#     input_file_name = input_path.stem
+#     output_file = Path(f'{input_file_name}.c')
+#     run_pipeline(input_path, output_file)

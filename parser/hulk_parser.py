@@ -1,4 +1,6 @@
 
+import sys
+import dill
 from cmp.errors import HulkSyntacticError
 from cmp.utils import Token
 from grammar.hulk_grammar import *
@@ -6,21 +8,41 @@ from lexer.hulk_token_types import TokenType
 from parser.parsing import ParserError, SLR1Parser
 
 class HulkParser(SLR1Parser):
-    def __init__(self):
-        super().__init__(G, verbose=True)
+    def __init__(self, use_cached = True):
+        if use_cached:
+            try:
+                with open('parser/hulk_parser_action.pkl', 'rb') as action_pkl:
+                    self.action = dill.load(action_pkl)
+                with open('parser/hulk_parser_goto.pkl', 'rb') as goto_pkl:
+                    self.goto = dill.load(goto_pkl)
+                with open('parser/hulk_parser_verbose.pkl', 'rb') as verbose_pkl:
+                    self.verbose = dill.load(verbose_pkl)
+            except:
+                super().__init__(G, verbose=True)
+
+        else:
+            super().__init__(G, verbose=True)
+            sys.setrecursionlimit(10000)
+
+            with open('parser/hulk_parser_action.pkl', 'wb') as action_pkl:
+                dill.dump(self.action, action_pkl)
+            with open('parser/hulk_parser_goto.pkl', 'wb') as goto_pkl:
+                dill.dump(self.goto, goto_pkl)
+            with open('parser/hulk_parser_verbose.pkl', 'wb') as verbose_pkl:
+                dill.dump(self.verbose, verbose_pkl)
 
     def __call__(self, tokens):
-        # try:
-            mapped_terminals = [tokens_terminals_map[t] for t in tokens]
-            derivation, operations, errors = super().__call__(mapped_terminals)
-        # except ParserError as error:
-        #     error_token = tokens[error.token_index]
-        #     error_text = HulkSyntacticError.Message % error_token.Name
-        #     errors = [HulkSyntacticError(error_text, '', '')]
-        #     # errors = [HulkSyntacticError(error_text, error_token.row, error_token.column)]
-        #     return None, None, errors
+        try:
+            mapped_terminals = [tokens_terminals_map[t.token_type] for t in tokens]
+            derivation, operations = super().__call__(mapped_terminals)
+            return derivation, operations, []
+        except ParserError as error:
+            error_token = tokens[error.token_index]
+            error_text = HulkSyntacticError.Message % error_token.lex
+            errors = [HulkSyntacticError(error_text, error_token.row, error_token.col)]
+            return None, None, errors
 
-            return derivation, operations, errors
+        
 
 
 tokens_terminals_map = {

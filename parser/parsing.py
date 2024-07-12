@@ -18,7 +18,7 @@ class Building_Table_Conflicts():
 # el estado al que corresponde ir cuando recibas el símbolo que está como key en el dict 
 #  epsilon-transitions para el estado también van en un dict(epsilon_transitions) declarado en state
 def build_LR0_automaton(G):
-    # assert len(G.startSymbol.productions) == 1, 'Grammar must be augmented'
+    assert len(G.startSymbol.productions) == 1, 'Grammar must be augmented'
     # se recibe una gramática aumentada
     start_production = G.startSymbol.productions[0]
     start_item = Item(start_production, 0)
@@ -77,14 +77,12 @@ class ShiftReduceParser:
         self.verbose = verbose
         self.action = {}
         self.goto = {}
-        self.errors = self._build_parsing_table()
+        self._build_parsing_table()
     
     def _build_parsing_table(self):
         raise NotImplementedError()
 
     def __call__(self, w):
-        if(self.errors):
-            return None,None, self.errors
         stack = [ 0 ]
         cursor = 0
         output = []
@@ -128,7 +126,7 @@ class ShiftReduceParser:
                 output.append(tag)
             elif(action == self.OK):
                 stack.pop()
-                return output, operations, self.errors 
+                return output, operations
 
 class SLR1Parser(ShiftReduceParser):
 
@@ -138,10 +136,10 @@ class SLR1Parser(ShiftReduceParser):
         follows = compute_follows(G, firsts)
         errors = []
     
-        for key, value in firsts.items():
+        for key, value in follows.items():
             # Format the string as "key : value"
             line_to_write = f"{key} : {value}\n"
-            with open('output.txt', 'a', encoding='utf-8') as file:
+            with open('follows.txt', 'a', encoding='utf-8') as file:
                 file.write(line_to_write)
 
         
@@ -184,7 +182,10 @@ class SLR1Parser(ShiftReduceParser):
                         self._register(self.action, (idx, next_symbol), (self.SHIFT, next_node.idx), errors)
                     else:
                         self._register(self.goto, (idx, next_symbol), next_node.idx, errors)
-        return errors
+        if(errors):
+            for error in errors:
+                print(f"There is a conflict at state {error.key}: current value is {error.prev_value} and tried to insert the new value {error.new_value}")
+            raise Exception("Grammar is not SLR(1)")
     # - Feel free to use `self._register(...)`)
     @staticmethod
     def _register(table, key, value, errors):
@@ -195,7 +196,7 @@ class SLR1Parser(ShiftReduceParser):
             errors.append(Building_Table_Conflicts(key, table[key], value))
             # guardar todos los conflictos en la tabla y después imprimir posición de tabla con todos los posibles valores por cada pos que dio conflicto
             #raise Exception(f"Grammar is not SLR(1). There is a conflict at state {key}: current value is {table[key]} and tried to insert the new value {value}")
-            print("Error: " + str(table[key]) + " es el valor en tabla")
-            print("key: " + str(key) + " new value: " + str(value))
+            # print("Error: " + str(table[key]) + " es el valor en tabla")
+            # print("key: " + str(key) + " new value: " + str(value))
 
     

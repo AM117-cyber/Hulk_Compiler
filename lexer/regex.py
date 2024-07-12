@@ -1,8 +1,9 @@
+from cmp.errors import HulkSyntacticError
 from parser.evaluation import evaluate_reverse_parse
 from lexer.automata import nfa_to_dfa
 from lexer.automata_tools import automata_minimization
 from lexer.regex_grammar import pipe, star, opar, cpar, epsilon, symbol, G_
-from parser.parsing import SLR1Parser
+from parser.parsing import ParserError, SLR1Parser
 from cmp.utils import Token
 
 class Regex:
@@ -47,12 +48,13 @@ class Regex:
         return tokens
     
     def get_regex_ast(self):
-        parse, operations, build_table_errors = self.regex_parser([t.token_type for t in self.tokens])
-        if build_table_errors:
-            print("Grammar is not SLR(1)")
-            for err in build_table_errors:
-                print(f"There is a conflict at state {err.key}: current value is {err.prev_value} and tried to insert the new value {err.new_value}")
-            raise Exception()
+        try:
+            parse, operations = self.regex_parser([t.token_type for t in self.tokens])
+        except ParserError as error:
+            error_token = self.tokens[error.token_index]
+            error_text = HulkSyntacticError.Message % error_token.lex
+            errors = HulkSyntacticError(error_text, error_token.row, error_token.col)
+            raise Exception(errors)
         ast = evaluate_reverse_parse(parse, operations, self.tokens)
         
         return ast
