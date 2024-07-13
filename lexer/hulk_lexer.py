@@ -3,32 +3,14 @@ import dill
 import sys
 from cmp.utils import Token
 from lexer.hulk_token_types import TokenType
-from lexer.lexer_error import HulkLexicographicError
+from cmp.errors import HulkLexicographicError
 from lexer.lexer_generator import Lexer
 from lexer.regex_tokens import hulk_tokens
 from grammar.hulk_grammar import G
 
 class HulkLexer(Lexer):
-    def __init__(self, use_cached = True):
-        if use_cached:
-            try:
-                with open('lexer/hulk_lexer.pkl', 'rb') as automaton_pkl:
-                    self.automaton = dill.load(automaton_pkl)
-                self.eof = G.EOF
-                with open('lexer/hulk_lexer_regexs.pkl', 'rb') as regexs_pkl:
-                    self.regexs = dill.load(regexs_pkl)
-            except:
-                super().__init__(hulk_tokens, G.EOF)
-        else:
-            super().__init__(hulk_tokens, G.EOF)
-            sys.setrecursionlimit(10000)
-
-            with open('lexer/hulk_lexer.pkl', 'wb') as automaton_pkl:
-                dill.dump(self.automaton, automaton_pkl)
-            with open('lexer/hulk_lexer_regexs.pkl', 'wb') as regexs_pkl:
-                dill.dump(self.regexs, regexs_pkl)
-
-        
+    def __init__(self):
+        super().__init__(hulk_tokens, G.EOF)
 
     @staticmethod
     def report_errors(tokens):

@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import os
 from pathlib import Path
 
 from cmp.errors import HulkIOError
@@ -11,6 +12,7 @@ from parser.hulk_parser import HulkParser
 from semantic_checking.type_builder import TypeBuilder
 from semantic_checking.type_checker import TypeChecker
 from semantic_checking.type_collector import TypeCollector
+from tables.cache import *
 
 text ='''
 
@@ -275,7 +277,11 @@ def run_pipeline(text):
     print('=================== TEXT ======================')
     print(text)
     print('================== TOKENS =====================')
-    lexer = HulkLexer(use_cached=False)
+    if os.path.isfile("lang/hulk_lexer.pkl"):
+        lexer=load_object("lang/hulk_lexer.pkl")
+    else:
+        lexer=HulkLexer()
+        save_object(lexer,"lang/hulk_lexer.pkl")
     tokens, lexicographic_errors = lexer(text)
 
     if lexicographic_errors:
@@ -285,7 +291,11 @@ def run_pipeline(text):
     
     print(tokens)
     print('=================== PARSE =====================')
-    parser = HulkParser(use_cached=False)
+    if os.path.isfile("lang/hulk_parser.pkl"):
+        parser=load_object("lang/hulk_parser.pkl")
+    else:
+        parser = HulkParser()    
+        save_object(parser,"lang/hulk_parser.pkl")
     derivations, operations, parsing_errors = parser(tokens)
     if parsing_errors:
         for err in parsing_errors:
