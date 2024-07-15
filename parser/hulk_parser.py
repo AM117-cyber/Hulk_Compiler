@@ -9,7 +9,7 @@ from parser.parsing import ParserError, SLR1Parser
 
 class HulkParser(SLR1Parser):
     def __init__(self):
-        super().__init__(G, verbose=True)
+        super().__init__(G)
 
     def __call__(self, tokens):
         try:

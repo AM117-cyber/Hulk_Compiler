@@ -13,11 +13,9 @@ from semantic_checking.type_builder import TypeBuilder
 from semantic_checking.type_checker import TypeChecker
 from semantic_checking.type_collector import TypeCollector
 from tables.cache import *
+from tree_interpreter.interpreter import Interpreter
 
-text ='''
-
-
-function tan(x: Number): Number => sin(x) / cos(x);
+text ='''function tan(x: Number): Number => sin(x) / cos(x);
 function cot(x) => 1 / tan(x);
 function operate(x, y) {
     print(x + y);
@@ -54,7 +52,7 @@ type Point(x,y) {
     x = x;
     y = y;
 
-    getX() => self.x;
+    getX() => self.z := z;
     getY() => self.y;
 
     setX(x) => self.x := x;
@@ -248,10 +246,6 @@ type wacamole{
 
     let awacate: QueRico = new QueRico("siuuuu" @@ banda @ yaes + 4*5^2 @@ temporada_de_awacate == true) in aguacate.cascara("verde").lo_de_adentro(43*-1).semilla(true);
 };
-
-
-
-
                 '''
 
 def print_error(message):
@@ -301,12 +295,12 @@ def run_pipeline(text):
         for err in parsing_errors:
             print_error(err)
         return
-    print('\n'.join(repr(x) for x in derivations))
+    # print('\n'.join(repr(x) for x in derivations))
     print('==================== AST ======================')
     ast = evaluate_reverse_parse(derivations, operations, tokens)
     formatter = FormatVisitor()
     tree = formatter.visit(ast)
-    print(tree)
+    # print(tree)
     print('============== COLLECTING TYPES ===============')
     errors = []
     collector = TypeCollector(errors)
@@ -327,6 +321,18 @@ def run_pipeline(text):
     print('=============== CHECKING TYPES ================')
     checker = TypeChecker(context, errors)
     scope = checker.visit(ast)
+    print('Errors: [')
+    for error in errors:
+        print('\t', error)
+    print(']')
+    print('Context:')
+    print(context)
+    print('=============== HULK CONSOLE ================')
+    if len(errors) == 0:
+        interpreter = Interpreter(context, errors)
+        value, type = interpreter.visit(ast)
+        print(f'Value: {value} and Type: {type}')
+    print('============================================')
     print('Errors: [')
     for error in errors:
         print('\t', error)

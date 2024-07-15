@@ -2,6 +2,7 @@ import cmp.visitor as visitor
 from grammar.hulk_grammar import G
 from grammar.ast_nodes import *
 from cmp.semantic import *
+from cmp.errors import HulkSemanticError
 
 class TypeCollector(object):
     def __init__(self, errors=[]):
@@ -21,14 +22,15 @@ class TypeCollector(object):
             try:
                 self.visit(declaration)
             except SemanticError as error:
-                self.errors.append(error)
+                self.errors.append(HulkSemanticError(error,node.row,node.column))
 
     @visitor.when(TypeDeclarationNode)
     def visit(self, node :TypeDeclarationNode):
         try:
             new_type = self.context.create_type(node.name)
+            new_type.node = node
         except SemanticError as error:
-            self.errors.append(SemanticError(error))
+            self.errors.append(HulkSemanticError(error,node.row,node.column))
             if(node.name not in self.context.hulk_types):
                 self.context.set_type_error(node.name)
     
@@ -37,7 +39,7 @@ class TypeCollector(object):
         try:
             new_protocol = self.context.create_protocol(node.name)
         except SemanticError as error:
-            self.errors.append(SemanticError(error))
+            self.errors.append(HulkSemanticError(error,node.row,node.column))
             if(node.name not in self.context.hulk_protocols):
                 self.context.set_protocol_error(node.name) 
 

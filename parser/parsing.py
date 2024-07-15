@@ -67,6 +67,103 @@ def build_LR0_automaton(G):
 
     return automaton
 
+
+
+
+
+
+
+def build_deterministic_LR0_automaton(G):
+    assert len(G.startSymbol.productions) == 1, 'Grammar must be augmented'
+
+    start_production = G.startSymbol.productions[0]
+    start_item = Item(start_production, 0)
+
+    automaton = State(start_item, True)
+    #el booleano que se pasa a state representa si es final o no, por eso en todos pasamos true
+    automaton = State(tuple(automaton), True)
+    pending = [ automaton ] # va a tener los estados con varios items dentro
+    visited = { start_item: automaton }
+    states_per_kernel_items = {start_item: automaton} # porque el único item kernel del estado inicial es la prod inicial con pos 0
+    # los items kernels surgen de las transiciones hacia ti
+    current_kernel_item = start_item
+    while pending:
+        # una vez sacado el estado de pending ya tiene sus kernel items, solo hay que agregar los no kernel(epsilon-transitions)
+        current_state = pending.pop()
+        
+        current_kernel_states = []
+        curr_state_per_symbol_transition = {}
+        my_states = list(current_state.state)
+        non_kernel_states = []
+        while(my_states):
+            state = my_states.pop()
+            current_item = state.state
+            if(current_item.IsReduceItem):
+                continue
+            next_symbol = current_item.NextSymbol
+            count = len(non_kernel_states)
+            non_kernel_states = get_non_kernels(non_kernel_states, next_symbol, [state.name for state in current_state.state])
+            change = count != len(non_kernel_states)
+            if(change):
+                current_state.state = current_state.state + tuple(non_kernel_states)
+                my_states = my_states + non_kernel_states
+            #añadiendo transiciones para otros estados
+            if(not next_symbol in curr_state_per_symbol_transition):
+                new_state = State(tuple(State(current_item.NextItem(), True)), True)
+                curr_state_per_symbol_transition[next_symbol] = (new_state,[current_item.NextItem()])
+            else:
+                #hay un estado al que me debo mover con este símbolo
+                #luego a ese estado le agrego en sus kernel items el next_item correspondiente a mi current_item
+                curr_state_per_symbol_transition[next_symbol][1].append(current_item.NextItem())
+                curr_state_per_symbol_transition[next_symbol][0].state = curr_state_per_symbol_transition[next_symbol][0].state + tuple(State(current_item.NextItem(), True))
+        #en este punto los estados hacia los que tengo una transición ya tienen todos sus kernel items
+        for symbol in curr_state_per_symbol_transition.keys():
+            kernel_items = tuple(curr_state_per_symbol_transition[symbol][1])
+            if( kernel_items in states_per_kernel_items):
+                #si los kernel items ya están en el diccionario la transición se añade al estado que está en el value correspondiente
+                current_state.add_transition(symbol.Name, states_per_kernel_items[kernel_items])
+            else:
+                current_state.add_transition(symbol.Name, curr_state_per_symbol_transition[symbol][0])
+                states_per_kernel_items[kernel_items] = curr_state_per_symbol_transition[symbol][0]
+                pending.append(curr_state_per_symbol_transition[symbol][0])
+
+    return automaton
+
+def get_non_kernels(non_kernel_states, next_symbol,names):
+    if(next_symbol.IsNonTerminal):
+        for prod in next_symbol.productions:
+            new_item = Item(prod, 0)
+            new_state = State(new_item, True)
+            if(not new_state.name in names): # para no tener los non kernel items repetidos
+                non_kernel_states.append(new_state)
+                names.append(new_state.name)
+                if(not new_item.IsReduceItem):
+                    get_non_kernels(non_kernel_states, new_item.NextSymbol, names)
+    return non_kernel_states
+
+        # if(next_symbol.IsNonTerminal):
+
+
+            #si es no terminal se pone una epsilon_transition para toda su epsilon_clausure de primer nivel(no le sacas epsilon clausure a los que vienen después), que está dada por las producciones del next_symbol
+            
+            
+            # for 
+            # current_item.transitions[next_symbol] = State(current_item.NextItem, True)
+
+
+        # foreach item in state if item.next_symbol is terminal c then add transitions[c] = item.next_item and create a state with the closure of that item
+        # if it's non terminal Y then add transitions[Y] = item.next_item and epsilon_transitions[] = every production with Y -> .body
+        # Your code here!!! (Add the decided transitions)
+    # print(" after: ")
+    # print(visited)
+
+
+
+
+
+
+
+
 class ShiftReduceParser:
     SHIFT = 'SHIFT'
     REDUCE = 'REDUCE'
@@ -143,18 +240,18 @@ class SLR1Parser(ShiftReduceParser):
                 file.write(line_to_write)
 
         
-        automaton = build_LR0_automaton(G).to_deterministic()
+        automaton = build_deterministic_LR0_automaton(G)
         for i, node in enumerate(automaton):
         # Asigna el índice al nodo
             node.idx = i
-        # # Preparando el contenido a escribir
-        #     contenido = f"{i}\t\n\t {'\n\t '.join(str(x) for x in node.state)}\n"
+        # Preparando el contenido a escribir
+            # contenido = f"{i}\t\n\t {'\n\t '.join(str(x) for x in node.state)}\n"
     
-        # # Abre el archivo en modo de anexación ('a'), especificando la codificación UTF-8
-        #     with open('states.txt', 'a', encoding='utf-8') as archivo:
-        # # Escribe el contenido en el archivo
-        #         archivo.write(contenido)
-        #         archivo.close()
+        # Abre el archivo en modo de anexación ('a'), especificando la codificación UTF-8
+            # with open('states.txt', 'a', encoding='utf-8') as archivo:
+        # Escribe el contenido en el archivo
+                # archivo.write(contenido)
+                # archivo.close()
     
         for node in automaton:
             idx = node.idx

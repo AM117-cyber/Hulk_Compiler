@@ -3,6 +3,7 @@ from collections import OrderedDict
 from typing import Union
 
 
+
 class SemanticError(Exception):
     @property
     def text(self):
@@ -12,6 +13,8 @@ class Attribute:
     def __init__(self, name, typex = None):
         self.name = name
         self.type = typex
+        self.value = None
+        self.node = None
 
     def __str__(self):
         return f'[attrib] {self.name} : {self.type.name};'
@@ -24,6 +27,9 @@ class Attribute:
 
     def set_type(self,typex):
         self.type = typex
+    
+    def set_value(self, value):
+        self.value = value
     
 class AttributeError(Attribute):
     def __init__(self):
@@ -39,6 +45,7 @@ class Method:
         self.param_types = params_types
         self.return_type = return_type
         self.inferred_return_type = return_type
+        self.node = None
         # self.inferred_param_types = params_types
 
     #changed
@@ -157,6 +164,7 @@ class Type:
         self.parent = None
         self.param_names = []
         self.param_types = []
+        self.node = None
 
     #changed
     def __eq__(self, other):
@@ -201,11 +209,18 @@ class Type:
 
     def define_attribute(self, name: str, typex):
         #Ver si es un error
-        if name in self.attributes:
+        try:
+            self.get_attribute(name)
+        except SemanticError:
+            attribute = Attribute(name, typex)
+            self.attributes[name] = attribute
+            return attribute
+        else:
             raise SemanticError(f'Attribute "{name}" is already defined in {self.name}.')
-        attribute = Attribute(name, typex)
-        self.attributes[name] = attribute
-        return attribute
+
+        # if name in self.attributes:
+        #     raise SemanticError(f'Attribute "{name}" is already defined in {self.name}.')
+        
 
     def get_method(self, name: str):
         if name in self.methods:
@@ -495,9 +510,13 @@ class VariableInfo:
         self.type = vtype
         self.is_parameter = is_parameter
         self.is_error = is_error
+        self.value = None
     
     def set_type(self, vtype):
         self.type = vtype
+    
+    def set_value(self, value):
+        self.value = value
 
 class Scope:
     def __init__(self, parent=None):

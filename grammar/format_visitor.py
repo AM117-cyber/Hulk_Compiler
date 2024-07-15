@@ -185,3 +185,10 @@ class FormatVisitor:
         inst_name = self.visit(node.inst_name, tabs + 1)
         return f'{ans}\n{inst_name}'
     
+    @when(CheckTypeNode)
+    def visit(self, node, tabs=0):
+        ans = '\t' * tabs + f'\\__<expr> CheckTypeNode <expr>'
+        left = self.visit(node.left, tabs + 1)
+        right = self.visit(node.right, tabs + 1)
+        return f'{ans}\n{left}\n{right}'
+    
